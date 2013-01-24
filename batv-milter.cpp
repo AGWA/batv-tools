@@ -104,10 +104,12 @@ namespace {
 		// (if we haven't already determined that it is)
 		if (!batv_ctx->is_batv_rcpt) {
 			// Make sure that the BATV address is syntactically valid AND
+			// it's using a known tag type AND
 			// it's for a sender who actually uses BATV.
 			batv_ctx->is_batv_rcpt = 
 				batv_ctx->batv_rcpt.parse(canon_address(args[0]).c_str()) &&
-					config->is_batv_sender(batv_ctx->batv_rcpt.orig_mailfrom);
+					batv_ctx->batv_rcpt.tag_type == "prvs" &&
+					config->is_batv_sender(batv_ctx->batv_rcpt.loc_core + "@" + batv_ctx->batv_rcpt.domain);
 		}
 
 		return SMFIS_CONTINUE;
@@ -157,7 +159,7 @@ namespace {
 				const char* status = "invalid";
 
 				if (batv_ctx->batv_rcpt.tag_type == "prvs") {
-					if (prvs_validate(batv_ctx->batv_rcpt.tag_val, batv_ctx->batv_rcpt.orig_mailfrom, config->address_lifetime, config->key)) {
+					if (prvs_validate(batv_ctx->batv_rcpt.tag_val, batv_ctx->batv_rcpt.loc_core, batv_ctx->batv_rcpt.domain, config->address_lifetime, config->key)) {
 						status = "valid";
 					}
 				}
@@ -173,8 +175,8 @@ namespace {
 			if (batv_ctx->client_is_internal && config->is_batv_sender(batv_ctx->env_from) && !is_batv_address(batv_ctx->env_from.c_str())) {
 				// Message from internal sender who uses BATV -> rewrite the envelope sender to a BATV address.
 				// (We only do this if the envelope sender isn't already a BATV address)
-
-				std::string	new_sender(prvs_generate(batv_ctx->env_from, config->address_lifetime, config->key));
+				Email_address	sender(split_address(batv_ctx->env_from.c_str()));
+				std::string	new_sender(prvs_generate(sender.local_part, sender.domain, config->address_lifetime, config->key));
 
 				if (smfi_chgfrom(ctx, const_cast<char*>(new_sender.c_str()), NULL) == MI_FAILURE) {
 					std::clog << "on_eom: smfi_chgfrom failed" << std::endl;

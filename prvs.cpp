@@ -17,7 +17,7 @@ static unsigned int today ()
 	return (std::time(NULL) / 86400) % 1000;
 }
 
-bool	batv_milter::prvs_validate (const std::string& val, const std::string& orig_mailfrom, unsigned int lifetime, const std::vector<unsigned char>& key)
+bool	batv_milter::prvs_validate (const std::string& val, const std::string& loc_core, const std::string& domain, unsigned int lifetime, const std::vector<unsigned char>& key)
 {
 	if (val.size() != 10) {
 		return false;
@@ -43,9 +43,11 @@ bool	batv_milter::prvs_validate (const std::string& val, const std::string& orig
 
 	// validate the HMAC
 	// hash-source = K DDD <orig-mailfrom>
-	std::vector<unsigned char>	hash_source(4 + orig_mailfrom.size());
+	std::vector<unsigned char>	hash_source(4 + loc_core.size() + 1 + domain.size());
 	std::copy(val.begin(), val.begin() + 4, hash_source.begin());
-	std::copy(orig_mailfrom.begin(), orig_mailfrom.end(), hash_source.begin() + 4);
+	std::copy(loc_core.begin(), loc_core.end(), hash_source.begin() + 4);
+	hash_source[4 + loc_core.size()] = '@';
+	std::copy(domain.begin(), domain.end(), hash_source.begin() + 4 + loc_core.size() + 1);
 
 	unsigned char			correct_hmac[20];
 	HMAC(EVP_sha1(),
@@ -58,7 +60,7 @@ bool	batv_milter::prvs_validate (const std::string& val, const std::string& orig
 		(claimed_hmac[2] ^ correct_hmac[2])) == 0;
 }
 
-std::string	batv_milter::prvs_generate (const std::string& orig_mailfrom, unsigned int lifetime, const std::vector<unsigned char>& key)
+std::string	batv_milter::prvs_generate (const std::string& loc_core, const std::string& domain, unsigned int lifetime, const std::vector<unsigned char>& key)
 {
 	// tag-val        =  K DDD SSSSSS
 	char				val[11];
@@ -71,9 +73,11 @@ std::string	batv_milter::prvs_generate (const std::string& orig_mailfrom, unsign
 
 	// HMAC
 	// hash-source = K DDD <orig-mailfrom>
-	std::vector<unsigned char>	hash_source(4 + orig_mailfrom.size());
+	std::vector<unsigned char>	hash_source(4 + loc_core.size() + 1 + domain.size());
 	std::copy(val, val + 4, hash_source.begin());
-	std::copy(orig_mailfrom.begin(), orig_mailfrom.end(), hash_source.begin() + 4);
+	std::copy(loc_core.begin(), loc_core.end(), hash_source.begin() + 4);
+	hash_source[4 + loc_core.size()] = '@';
+	std::copy(domain.begin(), domain.end(), hash_source.begin() + 4 + loc_core.size() + 1);
 
 	unsigned char			hmac[20];
 	HMAC(EVP_sha1(),
@@ -85,8 +89,8 @@ std::string	batv_milter::prvs_generate (const std::string& orig_mailfrom, unsign
 						static_cast<unsigned int>(hmac[1]),
 						static_cast<unsigned int>(hmac[2]));
 
-	std::string			address("prvs=");
-	address.append(val, val + 10).append("=").append(orig_mailfrom);
+	std::string			address(loc_core);
+	address.append("+prvs=").append(val, val + 10).append("@").append(domain);
 	return address;
 }
 

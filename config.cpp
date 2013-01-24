@@ -137,6 +137,11 @@ void	Config::set (const std::string& directive, const std::string& value)
 		batv_senders.insert(value);
 	} else if (directive == "internal-host") {
 		internal_hosts.push_back(parse_cidr_string(value.c_str()));
+	} else if (directive == "sub-address-delimiter") {
+		if (value.size() != 1) {
+			throw Error("Sub address delimiter must be exactly one character");
+		}
+		sub_address_delimiter = value[0];
 	} else if (directive == "key-file") {
 		std::ifstream	key_file_in(value.c_str());
 		if (!key_file_in) {

@@ -17,9 +17,24 @@ static unsigned int today ()
 	return (std::time(NULL) / 86400) % 1000;
 }
 
-bool	batv_milter::prvs_validate (const std::string& val, const std::string& loc_core, const std::string& domain, unsigned int lifetime, const std::vector<unsigned char>& key)
+static void make_prvs_hash (unsigned char* hash_out, const char* tag_val, const Email_address& orig_mailfrom, const std::vector<unsigned char>& key)
 {
-	if (val.size() != 10) {
+	// hash-source = K DDD <orig-mailfrom>
+	std::vector<unsigned char>	hash_source(4 + orig_mailfrom.local_part.size() + 1 + orig_mailfrom.domain.size());
+	std::copy(tag_val, tag_val + 4, hash_source.begin());
+	std::copy(orig_mailfrom.local_part.begin(), orig_mailfrom.local_part.end(), hash_source.begin() + 4);
+	hash_source[4 + orig_mailfrom.local_part.size()] = '@';
+	std::copy(orig_mailfrom.domain.begin(), orig_mailfrom.domain.end(), hash_source.begin() + 4 + orig_mailfrom.local_part.size() + 1);
+
+	HMAC(EVP_sha1(),
+			&key[0], key.size(),
+			&hash_source[0], hash_source.size(),
+			hash_out, NULL);
+}
+
+bool	batv_milter::prvs_validate (const Batv_address& address, unsigned int lifetime, const std::vector<unsigned char>& key)
+{
+	if (address.tag_val.size() != 10) {
 		return false;
 	}
 
@@ -29,7 +44,7 @@ bool	batv_milter::prvs_validate (const std::string& val, const std::string& loc_
 	unsigned int			expiration_day;
 	unsigned int			claimed_hmac[3];
 
-	std::sscanf(val.c_str(), "%1u%3u%2x%2x%2x", &key_num, &expiration_day, &claimed_hmac[0], &claimed_hmac[1], &claimed_hmac[2]);
+	std::sscanf(address.tag_val.c_str(), "%1u%3u%2x%2x%2x", &key_num, &expiration_day, &claimed_hmac[0], &claimed_hmac[1], &claimed_hmac[2]);
 
 	// check the key-num
 	if (key_num != 0) {
@@ -42,25 +57,15 @@ bool	batv_milter::prvs_validate (const std::string& val, const std::string& loc_
 	}
 
 	// validate the HMAC
-	// hash-source = K DDD <orig-mailfrom>
-	std::vector<unsigned char>	hash_source(4 + loc_core.size() + 1 + domain.size());
-	std::copy(val.begin(), val.begin() + 4, hash_source.begin());
-	std::copy(loc_core.begin(), loc_core.end(), hash_source.begin() + 4);
-	hash_source[4 + loc_core.size()] = '@';
-	std::copy(domain.begin(), domain.end(), hash_source.begin() + 4 + loc_core.size() + 1);
-
 	unsigned char			correct_hmac[20];
-	HMAC(EVP_sha1(),
-			&key[0], key.size(),
-			&hash_source[0], hash_source.size(),
-			correct_hmac, NULL);
+	make_prvs_hash(correct_hmac, &address.tag_val[0], address.orig_mailfrom, key);
 
 	return ((claimed_hmac[0] ^ correct_hmac[0]) |
 		(claimed_hmac[1] ^ correct_hmac[1]) |
 		(claimed_hmac[2] ^ correct_hmac[2])) == 0;
 }
 
-std::string	batv_milter::prvs_generate (const std::string& loc_core, const std::string& domain, unsigned int lifetime, const std::vector<unsigned char>& key)
+Batv_address	batv_milter::prvs_generate (const Email_address& orig_mailfrom, unsigned int lifetime, const std::vector<unsigned char>& key)
 {
 	// tag-val        =  K DDD SSSSSS
 	char				val[11];
@@ -72,25 +77,17 @@ std::string	batv_milter::prvs_generate (const std::string& loc_core, const std::
 	snprintf(val + 1, 4, "%03u", (today() + lifetime) % 1000);
 
 	// HMAC
-	// hash-source = K DDD <orig-mailfrom>
-	std::vector<unsigned char>	hash_source(4 + loc_core.size() + 1 + domain.size());
-	std::copy(val, val + 4, hash_source.begin());
-	std::copy(loc_core.begin(), loc_core.end(), hash_source.begin() + 4);
-	hash_source[4 + loc_core.size()] = '@';
-	std::copy(domain.begin(), domain.end(), hash_source.begin() + 4 + loc_core.size() + 1);
-
 	unsigned char			hmac[20];
-	HMAC(EVP_sha1(),
-			&key[0], key.size(),
-			&hash_source[0], hash_source.size(),
-			hmac, NULL);
+	make_prvs_hash(hmac, val, orig_mailfrom, key);
 
 	snprintf(val + 4, 7, "%02x%02x%02x", static_cast<unsigned int>(hmac[0]),
 						static_cast<unsigned int>(hmac[1]),
 						static_cast<unsigned int>(hmac[2]));
 
-	std::string			address(loc_core);
-	address.append("+prvs=").append(val, val + 10).append("@").append(domain);
+	Batv_address	address;
+	address.tag_type = "prvs";
+	address.tag_val.assign(val, val + 10);
+	address.orig_mailfrom = orig_mailfrom;
 	return address;
 }
 

@@ -24,9 +24,10 @@ namespace {
 
 		// Message state:
 		unsigned int	num_batv_status_headers;// number of existing X-Batv-Status headers in the message
-		std::string	env_from;		// the message's envelope sender
+		Email_address	env_from; 		// the message's envelope sender
 		bool		is_batv_rcpt;		// is the message destined to a BATV address?
 		Batv_address	batv_rcpt;		// the message recipient, valid iff is_batv_rcpt==true
+		std::string	batv_rcpt_string;
 
 
 		Batv_context ()
@@ -85,7 +86,7 @@ namespace {
 		}
 
 		// Make note of the envelope sender
-		batv_ctx->env_from = canon_address(args[0]);
+		batv_ctx->env_from.parse(canon_address(args[0]).c_str());
 
 		return SMFIS_CONTINUE;
 	}
@@ -103,13 +104,16 @@ namespace {
 		// Check to see if this message is destined to a BATV address
 		// (if we haven't already determined that it is)
 		if (!batv_ctx->is_batv_rcpt) {
+			Email_address		rcpt_to;
+			rcpt_to.parse(canon_address(args[0]).c_str());
 			// Make sure that the BATV address is syntactically valid AND
 			// it's using a known tag type AND
 			// it's for a sender who actually uses BATV.
 			batv_ctx->is_batv_rcpt = 
-				batv_ctx->batv_rcpt.parse(canon_address(args[0]).c_str()) &&
+				batv_ctx->batv_rcpt.parse(rcpt_to, config->sub_address_delimiter) &&
 					batv_ctx->batv_rcpt.tag_type == "prvs" &&
-					config->is_batv_sender(batv_ctx->batv_rcpt.loc_core + "@" + batv_ctx->batv_rcpt.domain);
+					config->is_batv_sender(batv_ctx->batv_rcpt.orig_mailfrom.make_string());
+			batv_ctx->batv_rcpt_string = args[0];
 		}
 
 		return SMFIS_CONTINUE;
@@ -159,7 +163,7 @@ namespace {
 				const char* status = "invalid";
 
 				if (batv_ctx->batv_rcpt.tag_type == "prvs") {
-					if (prvs_validate(batv_ctx->batv_rcpt.tag_val, batv_ctx->batv_rcpt.loc_core, batv_ctx->batv_rcpt.domain, config->address_lifetime, config->key)) {
+					if (prvs_validate(batv_ctx->batv_rcpt, config->address_lifetime, config->key)) {
 						status = "valid";
 					}
 				}
@@ -168,17 +172,26 @@ namespace {
 					std::clog << "on_eom: smfi_addheader failed" << std::endl;
 					return SMFIS_TEMPFAIL;
 				}
+
+				// Restore the recipient to the original value
+				if (smfi_delrcpt(ctx, const_cast<char*>(batv_ctx->batv_rcpt_string.c_str())) == MI_FAILURE) {
+					std::clog << "on_eom: smfi_delrcpt failed" << std::endl;
+					return SMFIS_TEMPFAIL;
+				}
+				if (smfi_addrcpt(ctx, const_cast<char*>(batv_ctx->batv_rcpt.orig_mailfrom.make_string().c_str())) == MI_FAILURE) {
+					std::clog << "on_eom: smfi_addrcpt failed" << std::endl;
+					return SMFIS_TEMPFAIL;
+				}
 			}
 		}
 
 		if (config->do_sign) {
-			if (batv_ctx->client_is_internal && config->is_batv_sender(batv_ctx->env_from) && !is_batv_address(batv_ctx->env_from.c_str())) {
+			if (batv_ctx->client_is_internal && config->is_batv_sender(batv_ctx->env_from.make_string()) && !is_batv_address(batv_ctx->env_from, config->sub_address_delimiter)) {
 				// Message from internal sender who uses BATV -> rewrite the envelope sender to a BATV address.
 				// (We only do this if the envelope sender isn't already a BATV address)
-				Email_address	sender(split_address(batv_ctx->env_from.c_str()));
-				std::string	new_sender(prvs_generate(sender.local_part, sender.domain, config->address_lifetime, config->key));
+				Batv_address new_sender(prvs_generate(batv_ctx->env_from, config->address_lifetime, config->key));
 
-				if (smfi_chgfrom(ctx, const_cast<char*>(new_sender.c_str()), NULL) == MI_FAILURE) {
+				if (smfi_chgfrom(ctx, const_cast<char*>(new_sender.make_string(config->sub_address_delimiter).c_str()), NULL) == MI_FAILURE) {
 					std::clog << "on_eom: smfi_chgfrom failed" << std::endl;
 					return SMFIS_TEMPFAIL;
 				}
@@ -233,7 +246,7 @@ int main (int argc, const char** argv)
 
 	milter_desc.xxfi_name = const_cast<char*>("batv-milter");
 	milter_desc.xxfi_version = SMFI_VERSION;
-	milter_desc.xxfi_flags = SMFIF_CHGFROM | SMFIF_ADDHDRS | SMFIF_CHGHDRS;
+	milter_desc.xxfi_flags = SMFIF_CHGFROM | SMFIF_ADDHDRS | SMFIF_CHGHDRS | SMFIF_DELRCPT | SMFIF_ADDRCPT;
 	milter_desc.xxfi_connect = on_connect;
 	milter_desc.xxfi_helo = NULL;
 	milter_desc.xxfi_envfrom = on_envfrom;

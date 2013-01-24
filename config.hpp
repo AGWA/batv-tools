@@ -19,6 +19,7 @@ namespace batv_milter {
 		std::set<std::string>	batv_senders;		// we generate BATV addresses only for these senders/domains
 		unsigned int		address_lifetime;	// in days, how long BATV address is valid
 		Key			key;			// HMAC key for PRVS
+		char			sub_address_delimiter;	// e.g. "+"
 
 		bool			is_batv_sender (const std::string& address) const;
 		bool			is_internal_host (const struct in6_addr&) const;
@@ -33,6 +34,7 @@ namespace batv_milter {
 			do_sign = true;
 			do_verify = true;
 			address_lifetime = 7;
+			sub_address_delimiter = 0;
 		}
 
 		struct Error {

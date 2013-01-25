@@ -320,6 +320,14 @@ int main (int argc, const char** argv)
 		}
 	}
 
+	if (config->socket_mode != -1) {
+		// We don't have much control over the permissions of the socket, so
+		// approximate it by setting a umask that should result in the desired
+		// permissions on the socket.  This program doesn't create any other
+		// files so this shouldn't have any undesired side-effects.
+		umask(~config->socket_mode & 0777);
+	}
+
 	// Initialize the milter library
 	openssl_init_threads();
 

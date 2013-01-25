@@ -16,6 +16,7 @@ namespace batv_milter {
 		int			debug;
 		std::string		pid_file;
 		std::string		socket_spec;
+		int			socket_mode;		// or -1 to use the umask
 		bool			do_sign;
 		bool			do_verify;
 		std::vector<Ipv6_cidr>	internal_hosts;		// we generate BATV addresses only for mail from these hosts
@@ -36,6 +37,7 @@ namespace batv_milter {
 		{
 			daemon = false;
 			debug = 0;
+			socket_mode = -1;
 			do_sign = true;
 			do_verify = true;
 			address_lifetime = 7;

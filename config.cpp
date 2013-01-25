@@ -127,6 +127,14 @@ void	Config::set (const std::string& directive, const std::string& value)
 		load(config_in);
 	} else if (directive == "socket") {
 		socket_spec = value;
+	} else if (directive == "socket-mode") {
+		if (value.size() != 3 ||
+				value[0] < '0' || value[0] > '7' ||
+				value[1] < '0' || value[1] > '7' ||
+				value[2] < '0' || value[2] > '7') {
+			throw Error("Invalid socket mode (not a 3 digit octal number): " + value);
+		}
+		socket_mode = ((value[0] - '0') << 6) | ((value[1] - '0') << 3) | (value[2] - '0');
 	} else if (directive == "mode") {
 		if (value == "sign") {
 			do_sign = true;

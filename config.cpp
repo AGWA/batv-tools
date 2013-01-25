@@ -106,7 +106,19 @@ bool Config::is_internal_host (const struct in6_addr& addr) const
 
 void	Config::set (const std::string& directive, const std::string& value)
 {
-	if (directive == "config") {
+	if (directive == "daemon") {
+		if (value == "yes" || value == "true" || value == "on" || value == "1") {
+			daemon = true;
+		} else if (value == "no" || value == "false" || value == "off" || value == "0") {
+			daemon = false;
+		} else {
+			throw Error("Invalid boolean value " + value);
+		}
+	} else if (directive == "debug") {
+		debug = std::atoi(value.c_str());
+	} else if (directive == "pid-file") {
+		pid_file = value;
+	} else if (directive == "config") {
 		// Include another config file
 		std::ifstream	config_in(value.c_str());
 		if (!config_in) {

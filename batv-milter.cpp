@@ -3,6 +3,10 @@
 #include "address.hpp"
 #include "openssl-threads.hpp"
 #include <iostream>
+#include <fstream>
+#include <fcntl.h>
+#include <unistd.h>
+#include <errno.h>
 #include <algorithm>
 #include <libmilter/mfapi.h>
 #include <cstring>
@@ -47,7 +51,7 @@ namespace {
 
 	sfsistat on_connect (SMFICTX* ctx, char* hostname, struct sockaddr* hostaddr)
 	{
-		std::cerr << "on_connect " << ctx << '\n';
+		if (config->debug) std::cerr << "on_connect " << ctx << '\n';
 
 		Batv_context*		batv_ctx = new Batv_context;
 		if (smfi_setpriv(ctx, batv_ctx) == MI_FAILURE) {
@@ -72,7 +76,7 @@ namespace {
 
 	sfsistat on_envfrom (SMFICTX* ctx, char** args)
 	{
-		std::cerr << "on_envfrom " << ctx << '\n';
+		if (config->debug) std::cerr << "on_envfrom " << ctx << '\n';
 
 		Batv_context*		batv_ctx = static_cast<Batv_context*>(smfi_getpriv(ctx));
 		if (batv_ctx == NULL) {
@@ -93,7 +97,7 @@ namespace {
 
 	sfsistat on_envrcpt (SMFICTX* ctx, char** args)
 	{
-		std::cerr << "on_envrcpt " << ctx << '\n';
+		if (config->debug) std::cerr << "on_envrcpt " << ctx << '\n';
 
 		Batv_context*		batv_ctx = static_cast<Batv_context*>(smfi_getpriv(ctx));
 		if (batv_ctx == NULL) {
@@ -121,7 +125,7 @@ namespace {
 
 	sfsistat on_header (SMFICTX* ctx, char* name, char* value)
 	{
-		std::cerr << "on_header " << ctx << '\n';
+		if (config->debug) std::cerr << "on_header " << ctx << '\n';
 
 		Batv_context*		batv_ctx = static_cast<Batv_context*>(smfi_getpriv(ctx));
 		if (batv_ctx == NULL) {
@@ -139,7 +143,7 @@ namespace {
 
 	sfsistat on_eom (SMFICTX* ctx)
 	{
-		std::cerr << "on_eom " << ctx << '\n';
+		if (config->debug) std::cerr << "on_eom " << ctx << '\n';
 
 		Batv_context*		batv_ctx = static_cast<Batv_context*>(smfi_getpriv(ctx));
 		if (batv_ctx == NULL) {
@@ -205,7 +209,7 @@ namespace {
 
 	sfsistat on_abort (SMFICTX* ctx)
 	{
-		std::cerr << "on_abort " << ctx << '\n';
+		if (config->debug) std::cerr << "on_abort " << ctx << '\n';
 		if (Batv_context* batv_ctx = static_cast<Batv_context*>(smfi_getpriv(ctx))) {
 			batv_ctx->clear_message_state();
 		}
@@ -213,7 +217,7 @@ namespace {
 	}
 	sfsistat on_close (SMFICTX* ctx)
 	{
-		std::cerr << "on_close " << ctx << '\n';
+		if (config->debug) std::cerr << "on_close " << ctx << '\n';
 
 		delete static_cast<Batv_context*>(smfi_getpriv(ctx));
 		return SMFIS_CONTINUE; // return value doesn't matter
@@ -272,7 +276,54 @@ int main (int argc, const char** argv)
 		conn_spec = config->socket_spec;
 	}
 
+	// Daemonize, if applicable
+	if (config->daemon) {
+		// Open the PID file (open before forking so we can report errors)
+		std::ofstream	pid_out;
+		if (!config->pid_file.empty()) {
+			pid_out.open(config->pid_file.c_str(), std::ofstream::out | std::ofstream::trunc);
+			if (!pid_out) {
+				std::clog << "Unable to open PID file " << config->pid_file << " for writing." << std::endl;
+				return 1;
+			}
+		}
+
+		pid_t		pid = fork();
+		if (pid == -1) {
+			std::clog << "fork: " << strerror(errno) << std::endl;
+			return 1;
+		}
+		if (pid != 0) {
+			// Exit parent
+			return 0;
+		}
+		setsid();
+		
+		// Write the PID file now that we've forked
+		if (pid_out) {
+			pid_out << getpid() << '\n';
+			pid_out.close();
+		}
+
+		// dup stdin, stdout, stderr to /dev/null
+		if (isatty(0) || errno == EBADF) {
+			close(0);
+			open("/dev/null", O_RDONLY);
+		}
+		if (isatty(1) || errno == EBADF) {
+			close(1);
+			open("/dev/null", O_WRONLY);
+		}
+		if (isatty(2) || errno == EBADF) {
+			close(2);
+			open("/dev/null", O_WRONLY);
+		}
+	}
+
+	// Initialize the milter library
 	openssl_init_threads();
+
+	smfi_setdbg(config->debug);
 
 	bool			ok = true;
 
@@ -286,15 +337,20 @@ int main (int argc, const char** argv)
 		ok = false;
 	}
 
+	// Run the milter
 	if (ok && smfi_main() == MI_FAILURE) {
 		std::clog << "smfi_main failed" << std::endl;
 		ok = false;
 	}
 
+	// Clean up
 	openssl_cleanup_threads();
 
 	if (config->socket_spec[0] == '/') {
 		unlink(config->socket_spec.c_str());
+	}
+	if (!config->pid_file.empty()) {
+		unlink(config->pid_file.c_str());
 	}
        
 	return ok ? 0 : 1;

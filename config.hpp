@@ -12,6 +12,9 @@ namespace batv_milter {
 		typedef std::pair<struct in6_addr, unsigned int> Ipv6_cidr;	// an IPv6 address and prefix length
 		typedef std::vector<unsigned char> Key;
 
+		bool			daemon;
+		int			debug;
+		std::string		pid_file;
 		std::string		socket_spec;
 		bool			do_sign;
 		bool			do_verify;
@@ -31,6 +34,8 @@ namespace batv_milter {
 
 		Config ()
 		{
+			daemon = false;
+			debug = 0;
 			do_sign = true;
 			do_verify = true;
 			address_lifetime = 7;

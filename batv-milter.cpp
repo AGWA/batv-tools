@@ -263,6 +263,10 @@ int main (int argc, const char** argv)
 
 	std::string		conn_spec;
 	if (config->socket_spec[0] == '/') {
+		if (access(config->socket_spec.c_str(), F_OK) == 0) {
+			std::clog << config->socket_spec << ": socket file already exists" << std::endl;
+			return 1;
+		}
 		conn_spec = "unix:" + config->socket_spec;
 	} else {
 		conn_spec = config->socket_spec;
@@ -270,26 +274,29 @@ int main (int argc, const char** argv)
 
 	openssl_init_threads();
 
-	if (smfi_setconn(const_cast<char*>(conn_spec.c_str())) == MI_FAILURE) {
+	bool			ok = true;
+
+	if (ok && smfi_setconn(const_cast<char*>(conn_spec.c_str())) == MI_FAILURE) {
 		std::clog << "smfi_setconn failed" << std::endl;
-		openssl_cleanup_threads();
-		return 1;
+		ok = false;
 	}
 
-	if (smfi_register(milter_desc) == MI_FAILURE) {
+	if (ok && smfi_register(milter_desc) == MI_FAILURE) {
 		std::clog << "smfi_register failed" << std::endl;
-		openssl_cleanup_threads();
-		return 1;
+		ok = false;
 	}
 
-	if (smfi_main() == MI_FAILURE) {
+	if (ok && smfi_main() == MI_FAILURE) {
 		std::clog << "smfi_main failed" << std::endl;
-		openssl_cleanup_threads();
-		return 1;
+		ok = false;
 	}
 
 	openssl_cleanup_threads();
 
-	return 0;
+	if (config->socket_spec[0] == '/') {
+		unlink(config->socket_spec.c_str());
+	}
+       
+	return ok ? 0 : 1;
 }
 

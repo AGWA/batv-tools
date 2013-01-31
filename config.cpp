@@ -7,7 +7,7 @@
 #include <fstream>
 #include <limits>
 
-using namespace batv_milter;
+using namespace batv;
 
 namespace {
 	struct in6_addr		make_ipv4_mapped_address (const struct in_addr& ipv4_addr)

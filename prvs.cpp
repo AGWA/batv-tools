@@ -10,7 +10,7 @@
 #include <openssl/hmac.h>
 #include <openssl/evp.h>
 
-using namespace batv_milter;
+using namespace batv;
 
 static unsigned int today ()
 {
@@ -32,7 +32,7 @@ static void make_prvs_hash (unsigned char* hash_out, const char* tag_val, const 
 			hash_out, NULL);
 }
 
-bool	batv_milter::prvs_validate (const Batv_address& address, unsigned int lifetime, const std::vector<unsigned char>& key)
+bool	batv::prvs_validate (const Batv_address& address, unsigned int lifetime, const std::vector<unsigned char>& key)
 {
 	if (address.tag_val.size() != 10) {
 		return false;
@@ -65,7 +65,7 @@ bool	batv_milter::prvs_validate (const Batv_address& address, unsigned int lifet
 		(claimed_hmac[2] ^ correct_hmac[2])) == 0;
 }
 
-Batv_address	batv_milter::prvs_generate (const Email_address& orig_mailfrom, unsigned int lifetime, const std::vector<unsigned char>& key)
+Batv_address	batv::prvs_generate (const Email_address& orig_mailfrom, unsigned int lifetime, const std::vector<unsigned char>& key)
 {
 	// tag-val        =  K DDD SSSSSS
 	char				val[11];

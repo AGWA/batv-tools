@@ -7,7 +7,7 @@
 #include <string>
 #include <iosfwd>
 
-namespace batv_milter {
+namespace batv {
 	struct Config {
 		typedef std::pair<struct in6_addr, unsigned int> Ipv6_cidr;	// an IPv6 address and prefix length
 		typedef std::vector<unsigned char> Key;

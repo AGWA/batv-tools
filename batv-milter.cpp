@@ -17,7 +17,7 @@
 #include <string>
 #include <string.h>
 
-using namespace batv_milter;
+using namespace batv;
 
 namespace {
 	const Config*		config;

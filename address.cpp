@@ -2,7 +2,7 @@
 #include <cctype>
 #include <cstring>
 
-using namespace batv_milter;
+using namespace batv;
 
 bool Batv_address::parse (const Email_address& address, char sub_address_delimiter)
 {
@@ -101,7 +101,7 @@ std::string	Batv_address::make_string (char sub_address_delimiter) const
 }
 
 
-std::string batv_milter::canon_address (const char* addr)
+std::string batv::canon_address (const char* addr)
 {
 	// Strip pairs of leading and trailing angle brackets from the address
 	const char*	start = addr;

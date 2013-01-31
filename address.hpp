@@ -1,7 +1,7 @@
 #pragma once 
 #include <string>
 
-namespace batv_milter {
+namespace batv {
 	struct Email_address {
 		std::string	local_part;
 		std::string	domain;

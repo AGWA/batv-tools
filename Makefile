@@ -1,6 +1,7 @@
-CXX := g++
-CXXFLAGS := -Wall -pedantic -ansi -Wno-long-long -O2
-LDFLAGS := -lmilter -lpthread -Wl,-Bstatic -lcrypto -Wl,-Bdynamic
+CXX = c++
+CXXFLAGS = -Wall -pedantic -ansi -Wno-long-long -O2
+LDFLAGS = -lmilter -lpthread -lcrypto
+PREFIX = /usr/local
 
 OBJFILES = address.o config.o prvs.o openssl-threads.o batv-milter.o
 
@@ -12,4 +13,7 @@ batv-milter: $(OBJFILES)
 clean:
 	rm -f *.o batv-milter
 
-.PHONY: all clean
+install:
+	install -m 755 batv-milter $(PREFIX)/sbin/
+
+.PHONY: all clean install

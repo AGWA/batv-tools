@@ -49,6 +49,16 @@ namespace {
 		}
 	};
 
+	sfsistat milter_status (Config::Failure_mode failure_mode)
+	{
+		switch (failure_mode) {
+		case Config::FAILURE_TEMPFAIL:	return SMFIS_TEMPFAIL;
+		case Config::FAILURE_ACCEPT:	return SMFIS_ACCEPT;
+		case Config::FAILURE_REJECT:	return SMFIS_REJECT;
+		}
+		return SMFIS_TEMPFAIL;
+	}
+
 	sfsistat on_connect (SMFICTX* ctx, char* hostname, struct sockaddr* hostaddr)
 	{
 		if (config->debug) std::cerr << "on_connect " << ctx << '\n';
@@ -57,7 +67,7 @@ namespace {
 		if (smfi_setpriv(ctx, batv_ctx) == MI_FAILURE) {
 			delete batv_ctx;
 			std::clog << "on_connect: smfi_setpriv failed" << std::endl;
-			return SMFIS_TEMPFAIL;
+			return milter_status(config->on_internal_error);
 		}
 
 		if (!hostaddr) {
@@ -81,7 +91,7 @@ namespace {
 		Batv_context*		batv_ctx = static_cast<Batv_context*>(smfi_getpriv(ctx));
 		if (batv_ctx == NULL) {
 			std::clog << "on_envfrom: smfi_getpriv failed" << std::endl;
-			return SMFIS_TEMPFAIL;
+			return milter_status(config->on_internal_error);
 		}
 
 		if (!batv_ctx->client_is_internal && smfi_getsymval(ctx, const_cast<char*>("{auth_authen}")) != NULL) {
@@ -102,7 +112,7 @@ namespace {
 		Batv_context*		batv_ctx = static_cast<Batv_context*>(smfi_getpriv(ctx));
 		if (batv_ctx == NULL) {
 			std::clog << "on_envrcpt: smfi_getpriv failed" << std::endl;
-			return SMFIS_TEMPFAIL;
+			return milter_status(config->on_internal_error);
 		}
 
 		// Check to see if this message is destined to a BATV address
@@ -130,7 +140,7 @@ namespace {
 		Batv_context*		batv_ctx = static_cast<Batv_context*>(smfi_getpriv(ctx));
 		if (batv_ctx == NULL) {
 			std::clog << "on_header: smfi_getpriv failed" << std::endl;
-			return SMFIS_TEMPFAIL;
+			return milter_status(config->on_internal_error);
 		}
 
 		// Count the number of existing X-Batv-Status headers so we can remove them later.
@@ -148,7 +158,7 @@ namespace {
 		Batv_context*		batv_ctx = static_cast<Batv_context*>(smfi_getpriv(ctx));
 		if (batv_ctx == NULL) {
 			std::clog << "on_eom: smfi_getpriv failed" << std::endl;
-			return SMFIS_TEMPFAIL;
+			return milter_status(config->on_internal_error);
 		}
 
 		if (config->do_verify) {
@@ -158,7 +168,7 @@ namespace {
 				if (smfi_chgheader(ctx, const_cast<char*>("X-Batv-Status"), batv_ctx->num_batv_status_headers--, NULL) == MI_FAILURE) {
 					std::clog << "on_eom: smfi_chgheader failed" << std::endl;
 					batv_ctx->clear_message_state();
-					return SMFIS_TEMPFAIL;
+					return milter_status(config->on_internal_error);
 				}
 			}
 
@@ -176,19 +186,19 @@ namespace {
 				if (smfi_addheader(ctx, const_cast<char*>("X-Batv-Status"), const_cast<char*>(status)) == MI_FAILURE) {
 					std::clog << "on_eom: smfi_addheader failed" << std::endl;
 					batv_ctx->clear_message_state();
-					return SMFIS_TEMPFAIL;
+					return milter_status(config->on_internal_error);
 				}
 
 				// Restore the recipient to the original value
 				if (smfi_delrcpt(ctx, const_cast<char*>(batv_ctx->batv_rcpt_string.c_str())) == MI_FAILURE) {
 					std::clog << "on_eom: smfi_delrcpt failed" << std::endl;
 					batv_ctx->clear_message_state();
-					return SMFIS_TEMPFAIL;
+					return milter_status(config->on_internal_error);
 				}
 				if (smfi_addrcpt(ctx, const_cast<char*>(batv_ctx->batv_rcpt.orig_mailfrom.make_string().c_str())) == MI_FAILURE) {
 					std::clog << "on_eom: smfi_addrcpt failed" << std::endl;
 					batv_ctx->clear_message_state();
-					return SMFIS_TEMPFAIL;
+					return milter_status(config->on_internal_error);
 				}
 			}
 		}
@@ -202,7 +212,7 @@ namespace {
 				if (smfi_chgfrom(ctx, const_cast<char*>(new_sender.make_string(config->sub_address_delimiter).c_str()), NULL) == MI_FAILURE) {
 					std::clog << "on_eom: smfi_chgfrom failed" << std::endl;
 					batv_ctx->clear_message_state();
-					return SMFIS_TEMPFAIL;
+					return milter_status(config->on_internal_error);
 				}
 			}
 		}

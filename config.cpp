@@ -173,6 +173,16 @@ void	Config::set (const std::string& directive, const std::string& value)
 			key_file_in.get(ch);
 			key.push_back(ch);
 		}
+	} else if (directive == "on-internal-error") {
+		if (value == "tempfail") {
+			on_internal_error = FAILURE_TEMPFAIL;
+		} else if (value == "accept") {
+			on_internal_error = FAILURE_ACCEPT;
+		} else if (value == "reject") {
+			on_internal_error = FAILURE_REJECT;
+		} else {
+			throw Error("Invalid value for 'on-internal-error' directive (should be 'tempfail', 'accept', or 'reject'): " + value);
+		}
 	} else {
 		throw Error("Invalid config directive " + directive);
 	}

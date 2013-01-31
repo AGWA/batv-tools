@@ -12,6 +12,12 @@ namespace batv_milter {
 		typedef std::pair<struct in6_addr, unsigned int> Ipv6_cidr;	// an IPv6 address and prefix length
 		typedef std::vector<unsigned char> Key;
 
+		enum Failure_mode {
+			FAILURE_TEMPFAIL,
+			FAILURE_ACCEPT,
+			FAILURE_REJECT
+		};
+
 		bool			daemon;
 		int			debug;
 		std::string		pid_file;
@@ -24,6 +30,7 @@ namespace batv_milter {
 		unsigned int		address_lifetime;	// in days, how long BATV address is valid
 		Key			key;			// HMAC key for PRVS
 		char			sub_address_delimiter;	// e.g. "+"
+		Failure_mode		on_internal_error;	// what to do when an internal error happens
 
 		bool			is_batv_sender (const std::string& address) const;
 		bool			is_internal_host (const struct in6_addr&) const;
@@ -42,6 +49,7 @@ namespace batv_milter {
 			do_verify = true;
 			address_lifetime = 7;
 			sub_address_delimiter = 0;
+			on_internal_error = FAILURE_TEMPFAIL;
 		}
 
 		struct Error {

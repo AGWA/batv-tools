@@ -157,6 +157,7 @@ namespace {
 			while (batv_ctx->num_batv_status_headers > 0) {
 				if (smfi_chgheader(ctx, const_cast<char*>("X-Batv-Status"), batv_ctx->num_batv_status_headers--, NULL) == MI_FAILURE) {
 					std::clog << "on_eom: smfi_chgheader failed" << std::endl;
+					batv_ctx->clear_message_state();
 					return SMFIS_TEMPFAIL;
 				}
 			}
@@ -174,16 +175,19 @@ namespace {
 
 				if (smfi_addheader(ctx, const_cast<char*>("X-Batv-Status"), const_cast<char*>(status)) == MI_FAILURE) {
 					std::clog << "on_eom: smfi_addheader failed" << std::endl;
+					batv_ctx->clear_message_state();
 					return SMFIS_TEMPFAIL;
 				}
 
 				// Restore the recipient to the original value
 				if (smfi_delrcpt(ctx, const_cast<char*>(batv_ctx->batv_rcpt_string.c_str())) == MI_FAILURE) {
 					std::clog << "on_eom: smfi_delrcpt failed" << std::endl;
+					batv_ctx->clear_message_state();
 					return SMFIS_TEMPFAIL;
 				}
 				if (smfi_addrcpt(ctx, const_cast<char*>(batv_ctx->batv_rcpt.orig_mailfrom.make_string().c_str())) == MI_FAILURE) {
 					std::clog << "on_eom: smfi_addrcpt failed" << std::endl;
+					batv_ctx->clear_message_state();
 					return SMFIS_TEMPFAIL;
 				}
 			}
@@ -197,6 +201,7 @@ namespace {
 
 				if (smfi_chgfrom(ctx, const_cast<char*>(new_sender.make_string(config->sub_address_delimiter).c_str()), NULL) == MI_FAILURE) {
 					std::clog << "on_eom: smfi_chgfrom failed" << std::endl;
+					batv_ctx->clear_message_state();
 					return SMFIS_TEMPFAIL;
 				}
 			}

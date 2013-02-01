@@ -1,0 +1,22 @@
+#!/bin/sh
+
+set -e
+
+if [ "$1" = "configure" ]; then
+
+	# Create user/group
+	if ! id -u batv-milter >/dev/null 2>&1; then
+		adduser --quiet --system --group --home /var/run/batv-milter batv-milter
+	fi
+
+	# Set ownership if the admin has not overridden it.
+	if ! dpkg-statoverride --list /var/run/batv-milter >/dev/null; then
+		mkdir -p /var/run/batv-milter;
+		chown batv-milter:batv-milter /var/run/batv-milter;
+		chmod g+wrxs /var/run/batv-milter;
+	fi
+fi
+
+#DEBHELPER#
+
+exit 0;

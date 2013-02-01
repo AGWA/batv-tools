@@ -1,0 +1,3 @@
+# Command-line options specified here will override the contents of
+# /etc/batv-milter.conf.
+DAEMON_OPTS=""

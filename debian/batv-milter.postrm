@@ -1,0 +1,18 @@
+#!/bin/sh
+
+set -e
+
+if [ "$1" = "purge" ]; then
+
+	# Remove user/group
+	if [ -x /usr/sbin/deluser ] && id -u batv-milter >/dev/null 2>&1; then
+		deluser --quiet batv-milter
+	fi
+
+	# Remove /var/run/batv-milter (don't complain if it's not empty)
+	rmdir /var/run/batv-milter 2>/dev/null || true
+fi
+
+#DEBHELPER#
+
+exit 0

@@ -27,11 +27,12 @@ namespace {
 		bool		client_is_internal;
 
 		// Message state:
-		unsigned int	num_batv_status_headers;// number of existing X-Batv-Status headers in the message
-		Email_address	env_from; 		// the message's envelope sender
-		bool		is_batv_rcpt;		// is the message destined to a BATV address?
-		Batv_address	batv_rcpt;		// the message recipient, valid iff is_batv_rcpt==true
-		std::string	batv_rcpt_string;
+		unsigned int		num_batv_status_headers;// number of existing X-Batv-Status headers in the message
+		Email_address		env_from; 		// the message's envelope sender
+		bool			is_batv_rcpt;		// is the message destined to a BATV address?
+		Batv_address		batv_rcpt;		// the message recipient, valid iff is_batv_rcpt==true
+		std::string		batv_rcpt_string;	// original message recipient string, iff is_batv_rcpt==true
+		const Config::Key*	batv_rcpt_key;		// the key to be used to sign the address, iff is_batv_rcpt==true
 
 
 		Batv_context ()
@@ -39,6 +40,7 @@ namespace {
 			client_is_internal = false;
 			num_batv_status_headers = 0;
 			is_batv_rcpt = false;
+			batv_rcpt_key = NULL;
 		}
 
 		void clear_message_state ()
@@ -120,14 +122,17 @@ namespace {
 		if (!batv_ctx->is_batv_rcpt) {
 			Email_address		rcpt_to;
 			rcpt_to.parse(canon_address(args[0]).c_str());
-			// Make sure that the BATV address is syntactically valid AND
-			// it's using a known tag type AND
-			// it's for a sender who actually uses BATV.
-			batv_ctx->is_batv_rcpt = 
-				batv_ctx->batv_rcpt.parse(rcpt_to, config->sub_address_delimiter) &&
-					batv_ctx->batv_rcpt.tag_type == "prvs" &&
-					config->is_batv_sender(batv_ctx->batv_rcpt.orig_mailfrom.make_string());
-			batv_ctx->batv_rcpt_string = args[0];
+			// Make sure that the BATV address is syntactically valid AND it's using a known tag type:
+			if (batv_ctx->batv_rcpt.parse(rcpt_to, config->sub_address_delimiter) &&
+					batv_ctx->batv_rcpt.tag_type == "prvs") {
+				// Get the key for this sender:
+				batv_ctx->batv_rcpt_key = config->get_key(batv_ctx->batv_rcpt.orig_mailfrom.make_string());
+				if (batv_ctx->batv_rcpt_key != NULL) {
+					// A non-NULL key means this is a BATV sender.
+					batv_ctx->is_batv_rcpt = true;
+					batv_ctx->batv_rcpt_string = args[0];
+				}
+			}
 		}
 
 		return SMFIS_CONTINUE;
@@ -178,7 +183,7 @@ namespace {
 				const char* status = "invalid";
 
 				if (batv_ctx->batv_rcpt.tag_type == "prvs") {
-					if (prvs_validate(batv_ctx->batv_rcpt, config->address_lifetime, config->key)) {
+					if (prvs_validate(batv_ctx->batv_rcpt, config->address_lifetime, *batv_ctx->batv_rcpt_key)) {
 						status = "valid";
 					}
 				}
@@ -204,10 +209,13 @@ namespace {
 		}
 
 		if (config->do_sign) {
-			if (batv_ctx->client_is_internal && config->is_batv_sender(batv_ctx->env_from.make_string()) && !is_batv_address(batv_ctx->env_from, config->sub_address_delimiter)) {
+			const Config::Key*	sender_key = NULL;
+			if (batv_ctx->client_is_internal &&
+					!is_batv_address(batv_ctx->env_from, config->sub_address_delimiter) &&
+					(sender_key = config->get_key(batv_ctx->env_from.make_string())) != NULL) {
 				// Message from internal sender who uses BATV -> rewrite the envelope sender to a BATV address.
 				// (We only do this if the envelope sender isn't already a BATV address)
-				Batv_address new_sender(prvs_generate(batv_ctx->env_from, config->address_lifetime, config->key));
+				Batv_address new_sender(prvs_generate(batv_ctx->env_from, config->address_lifetime, *sender_key));
 
 				if (smfi_chgfrom(ctx, const_cast<char*>(new_sender.make_string(config->sub_address_delimiter).c_str()), NULL) == MI_FAILURE) {
 					std::clog << "on_eom: smfi_chgfrom failed" << std::endl;

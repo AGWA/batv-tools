@@ -2,7 +2,7 @@
 
 #include <utility>
 #include <netinet/in.h>
-#include <set>
+#include <map>
 #include <vector>
 #include <string>
 #include <iosfwd>
@@ -11,6 +11,7 @@ namespace batv {
 	struct Config {
 		typedef std::pair<struct in6_addr, unsigned int> Ipv6_cidr;	// an IPv6 address and prefix length
 		typedef std::vector<unsigned char> Key;
+		typedef std::map<std::string, Key> Key_map;
 
 		enum Failure_mode {
 			FAILURE_TEMPFAIL,
@@ -26,15 +27,15 @@ namespace batv {
 		bool			do_sign;
 		bool			do_verify;
 		std::vector<Ipv6_cidr>	internal_hosts;		// we generate BATV addresses only for mail from these hosts
-		std::set<std::string>	batv_senders;		// we generate BATV addresses only for these senders/domains
+		Key_map			keys;			// map from sender address/domain to their HMAC key
 		unsigned int		address_lifetime;	// in days, how long BATV address is valid
-		Key			key;			// HMAC key for PRVS
 		char			sub_address_delimiter;	// e.g. "+"
 		Failure_mode		on_internal_error;	// what to do when an internal error happens
 
-		bool			is_batv_sender (const std::string& address) const;
-		bool			is_internal_host (const struct in6_addr&) const;
-		bool			is_internal_host (const struct in_addr&) const;
+		const Key*		get_key (const std::string& sender_address) const;	// Get HMAC key for the given sender
+												// (NULL if sender doesn't use BATV)
+		bool			is_internal_host (const struct in6_addr&) const;	// Is given IPv6 address internal?
+		bool			is_internal_host (const struct in_addr&) const;		// Is given IPv4 addres internal?
 
 		void			set (const std::string& directive, const std::string& value);
 		void			load (std::istream&);
@@ -58,7 +59,5 @@ namespace batv {
 			explicit Error (const std::string& m) : message(m) { }
 		};
 	};
-
-	// TODO: multiple key numbers (for key rollover), different key for each sender
 }
 

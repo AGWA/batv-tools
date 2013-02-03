@@ -64,21 +64,68 @@ namespace {
 
 		return Config::Ipv6_cidr(address, prefix_len);
 	}
+
+	void	load_key (Config::Key& key, std::istream& key_file_in)
+	{
+		key.clear();
+		while (key_file_in.good() && key_file_in.peek() != -1) {
+			char	ch;
+			key_file_in.get(ch);
+			key.push_back(ch);
+		}
+	}
+
+	void	load_key_map (Config::Key_map& key_map, std::istream& in)
+	{
+		while (in.good() && in.peek() != -1) {
+			// Skip comments (lines starting with #) and blank lines
+			if (in.peek() == '#' || in.peek() == '\n') {
+				in.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
+				continue;
+			}
+
+			// read address/domain
+			std::string		address;
+			in >> address;
+
+			// skip whitespace
+			in >> std::ws;
+
+			// read key file path
+			std::string		key_file_path;
+			std::getline(in, key_file_path);
+
+			// Load the keyfile 
+			std::ifstream		key_file_in(key_file_path.c_str());
+			if (!key_file_in) {
+				throw Config::Error("Unable to open key file " + key_file_path);
+			}
+			load_key(key_map[address], key_file_in);
+		}
+	}
 }
 
 
-bool Config::is_batv_sender (const std::string& address) const
+const Config::Key* Config::get_key (const std::string& sender_address) const
 {
+	Key_map::const_iterator		it;
+
 	// Look up the address itself
-	if (batv_senders.count(address)) {
-		return true;
+	it = keys.find(sender_address);
+	if (it != keys.end()) {
+		return !it->second.empty() ? &it->second : NULL;
 	}
+
 	// Try looking up only the domain
-	std::string::size_type	at_sign_pos = address.find('@');
-	if (at_sign_pos != std::string::npos && batv_senders.count(address.substr(at_sign_pos + 1))) {
-		return true;
+	std::string::size_type	at_sign_pos = sender_address.find('@');
+	if (at_sign_pos != std::string::npos) {
+		it = keys.find(sender_address.substr(at_sign_pos));
+		if (it != keys.end()) {
+			return !it->second.empty() ? &it->second : NULL;
+		}
 	}
-	return false;
+
+	return NULL;
 }
 
 bool Config::is_internal_host (const struct in_addr& addr) const
@@ -153,8 +200,6 @@ void	Config::set (const std::string& directive, const std::string& value)
 		if (address_lifetime < 1 || address_lifetime > 999) {
 			throw Error("Invalid address lifetime " + value + " (must be between 1 and 999, inclusive)");
 		}
-	} else if (directive == "sender") {
-		batv_senders.insert(value);
 	} else if (directive == "internal-host") {
 		internal_hosts.push_back(parse_cidr_string(value.c_str()));
 	} else if (directive == "sub-address-delimiter") {
@@ -162,17 +207,12 @@ void	Config::set (const std::string& directive, const std::string& value)
 			throw Error("Sub address delimiter must be exactly one character");
 		}
 		sub_address_delimiter = value[0];
-	} else if (directive == "key-file") {
-		std::ifstream	key_file_in(value.c_str());
-		if (!key_file_in) {
-			throw Error("Unable to open key file " + value);
+	} else if (directive == "key-map") {
+		std::ifstream	key_map_in(value.c_str());
+		if (!key_map_in) {
+			throw Error("Unable to open key map " + value);
 		}
-		key.clear();
-		while (key_file_in.good() && key_file_in.peek() != -1) {
-			char	ch;
-			key_file_in.get(ch);
-			key.push_back(ch);
-		}
+		load_key_map(keys, key_map_in);
 	} else if (directive == "on-internal-error") {
 		if (value == "tempfail") {
 			on_internal_error = FAILURE_TEMPFAIL;
@@ -217,8 +257,8 @@ void	Config::validate () const
 	if (socket_spec.empty()) {
 		throw Error("Milter socket not specified");
 	}
-	if (key.empty()) {
-		throw Error("Key file not specified");
+	if (keys.empty()) {
+		throw Error("No keys specified");
 	}
 }
 

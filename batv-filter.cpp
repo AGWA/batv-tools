@@ -22,12 +22,14 @@ namespace {
 		unsigned int		address_lifetime;	// in days, how long BATV address is valid
 		char			sub_address_delimiter;	// e.g. "+"
 		std::string		rcpt_header;		// e.g. "Delivered-To"
+		bool			is_mbox;		// input is in mbox format i.e. starts with "From " line
 
 		Filter_config ()
 		{
 			address_lifetime = 7;
 			sub_address_delimiter = '+';
 			rcpt_header = "Delivered-To";
+			is_mbox = true;
 		}
 	};
 
@@ -78,6 +80,16 @@ namespace {
 
 	void filter (const Filter_config& config, std::istream& in, std::ostream& out)
 	{
+		if (config.is_mbox) {
+			// Pass through the "From " line
+			std::string	from_line;
+			std::getline(in, from_line);
+			if (std::strncmp(from_line.c_str(), "From ", 5) != 0) {
+				throw Input_error("Message does not start with mbox From line.  Use -r option if input is not in mbox format.");
+			}
+			out << from_line << '\n';
+		}
+
 		// Process headers
 		std::string	name;
 		std::string	value;
@@ -137,7 +149,7 @@ int main (int argc, char** argv)
 	std::string	key_map_file;
 
 	int		flag;
-	while ((flag = getopt(argc, argv, "k:l:d:h:")) != -1) {
+	while ((flag = getopt(argc, argv, "k:l:d:h:r")) != -1) {
 		switch (flag) {
 		case 'k':
 			key_map_file = optarg;
@@ -155,6 +167,9 @@ int main (int argc, char** argv)
 		case 'h':
 			config.rcpt_header = optarg;
 			break;
+		case 'r':
+			config.is_mbox = false;
+			break;
 		default:
 			std::clog << "Usage: " << argv[0] << " [OPTIONS...]" << std::endl;
 			std::clog << "Options:" << std::endl;
@@ -162,6 +177,7 @@ int main (int argc, char** argv)
 			std::clog << " -l LIFETIME        -- lifetime, in days, of BATV addresses (default: 7)" << std::endl;
 			std::clog << " -d SUB_ADDR_DELIM  -- sub address delimiter (default: +)" << std::endl;
 			std::clog << " -h RCPT_HEADER     -- envelope recipient header (default: Delivered-To)" << std::endl;
+			std::clog << " -r                 -- input is a raw (non-mbox) message (default: no)" << std::endl;
 			return 2;
 		}
 	}

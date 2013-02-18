@@ -1,5 +1,6 @@
 #pragma once
 
+#include "key.hpp"
 #include <utility>
 #include <netinet/in.h>
 #include <map>
@@ -10,8 +11,6 @@
 namespace batv {
 	struct Config {
 		typedef std::pair<struct in6_addr, unsigned int> Ipv6_cidr;	// an IPv6 address and prefix length
-		typedef std::vector<unsigned char> Key;
-		typedef std::map<std::string, Key> Key_map;
 
 		enum Failure_mode {
 			FAILURE_TEMPFAIL,
@@ -53,11 +52,6 @@ namespace batv {
 			on_internal_error = FAILURE_TEMPFAIL;
 		}
 
-		struct Error {
-			std::string	message;
-
-			explicit Error (const std::string& m) : message(m) { }
-		};
 	};
 }
 

@@ -3,11 +3,12 @@ CXXFLAGS = -Wall -pedantic -ansi -Wno-long-long -O2
 LDFLAGS = -L/usr/lib/libmilter -lmilter -lpthread -lcrypto
 PREFIX = /usr/local
 
-OBJFILES = address.o config.o prvs.o openssl-threads.o batv-milter.o
+COMMON_OBJFILES = address.o common.o key.o prvs.o
+MILTER_OBJFILES = $(COMMON_OBJFILES) config.o openssl-threads.o batv-milter.o
 
 all: batv-milter
 
-batv-milter: $(OBJFILES)
+batv-milter: $(MILTER_OBJFILES)
 	$(CXX) $(CXXFLAGS) -o $@ $^ $(LDFLAGS)
 
 clean:

@@ -1,6 +1,8 @@
 #include "prvs.hpp"
 #include "config.hpp"
 #include "address.hpp"
+#include "key.hpp"
+#include "common.hpp"
 #include "openssl-threads.hpp"
 #include <iostream>
 #include <fstream>
@@ -32,7 +34,7 @@ namespace {
 		bool			is_batv_rcpt;		// is the message destined to a BATV address?
 		Batv_address		batv_rcpt;		// the message recipient, valid iff is_batv_rcpt==true
 		std::string		batv_rcpt_string;	// original message recipient string, iff is_batv_rcpt==true
-		const Config::Key*	batv_rcpt_key;		// the key to be used to sign the address, iff is_batv_rcpt==true
+		const Key*		batv_rcpt_key;		// the key to be used to sign the address, iff is_batv_rcpt==true
 
 
 		Batv_context ()
@@ -209,7 +211,7 @@ namespace {
 		}
 
 		if (config->do_sign) {
-			const Config::Key*	sender_key = NULL;
+			const Key*	sender_key = NULL;
 			if (batv_ctx->client_is_internal &&
 					!is_batv_address(batv_ctx->env_from, config->sub_address_delimiter) &&
 					(sender_key = config->get_key(batv_ctx->env_from.make_string())) != NULL) {
@@ -260,7 +262,7 @@ int main (int argc, const char** argv)
 			}
 		}
 		main_config.validate();
-	} catch (Config::Error e) {
+	} catch (const Config_error& e) {
 		std::clog << argv[0] << ": Configuration error: " << e.message << std::endl;
 		return 1;
 	}

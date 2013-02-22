@@ -57,7 +57,7 @@ stop() {
 case "$1" in
   start)
 	echo -n "Starting $DESC: "
-	start
+	start || exit $?
 	echo "$NAME."
 	;;
   stop)
@@ -68,7 +68,7 @@ case "$1" in
   restart|force-reload)
 	echo -n "Restarting $DESC: "
 	stop
-	start
+	start || exit $?
 	echo "$NAME."
 	;;
   *)

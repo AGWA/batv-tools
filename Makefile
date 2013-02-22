@@ -1,6 +1,7 @@
 CXX = c++
 CXXFLAGS = -Wall -pedantic -ansi -Wno-long-long -O2
-LDFLAGS = -L/usr/lib/libmilter -lmilter -lpthread -lcrypto
+LDFLAGS = -lcrypto
+LIBMILTER_LDFLAGS = -L/usr/lib/libmilter -lmilter -lpthread
 PREFIX = /usr/local
 
 PROGRAMS = batv-milter batv-filter
@@ -11,7 +12,7 @@ FILTER_OBJFILES = $(COMMON_OBJFILES) batv-filter.o
 all: $(PROGRAMS)
 
 batv-milter: $(MILTER_OBJFILES)
-	$(CXX) $(CXXFLAGS) -o $@ $^ $(LDFLAGS)
+	$(CXX) $(CXXFLAGS) -o $@ $^ $(LDFLAGS) $(LIBMILTER_LDFLAGS)
 
 batv-filter: $(FILTER_OBJFILES)
 	$(CXX) $(CXXFLAGS) -o $@ $^ $(LDFLAGS)

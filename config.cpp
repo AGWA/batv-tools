@@ -202,8 +202,5 @@ void	Config::validate () const
 	if (socket_spec.empty()) {
 		throw Config_error("Milter socket not specified");
 	}
-	if (keys.empty()) {
-		throw Config_error("No keys specified");
-	}
 }
 

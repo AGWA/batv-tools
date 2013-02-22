@@ -262,6 +262,9 @@ int main (int argc, const char** argv)
 			}
 		}
 		main_config.validate();
+		if (main_config.keys.empty()) {
+			std::clog << argv[0] << ": Warning: no keys specified in config.  This program will do nothing useful." << std::endl;
+		}
 	} catch (const Config_error& e) {
 		std::clog << argv[0] << ": Configuration error: " << e.message << std::endl;
 		return 1;

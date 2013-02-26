@@ -5,7 +5,7 @@ LIBMILTER_LDFLAGS = -L/usr/lib/libmilter -lmilter -lpthread
 PREFIX = /usr/local
 
 MILTER_PROGRAMS = batv-milter
-TOOLS_PROGRAMS = batv-filter batv-sign
+TOOLS_PROGRAMS = batv-validate batv-sign
 PROGRAMS = $(TOOLS_PROGRAMS) $(MILTER_PROGRAMS)
 
 COMMON_OBJFILES = address.o common.o key.o prvs.o
@@ -20,7 +20,7 @@ all-milter: $(MILTER_PROGRAMS)
 batv-milter: $(COMMON_OBJFILES) $(MILTER_OBJFILES) batv-milter.o
 	$(CXX) $(CXXFLAGS) -o $@ $^ $(LDFLAGS) $(LIBMILTER_LDFLAGS)
 
-batv-filter: $(COMMON_OBJFILES) batv-filter.o
+batv-validate: $(COMMON_OBJFILES) batv-validate.o
 	$(CXX) $(CXXFLAGS) -o $@ $^ $(LDFLAGS)
 
 batv-sign: $(COMMON_OBJFILES) batv-sign.o
@@ -31,7 +31,7 @@ clean:
 
 install:
 	install -m 755 batv-milter $(PREFIX)/sbin/
-	install -m 755 batv-filter $(PREFIX)/bin/
+	install -m 755 batv-validate $(PREFIX)/bin/
 	install -m 755 batv-sign $(PREFIX)/bin/
 
 .PHONY: all clean install

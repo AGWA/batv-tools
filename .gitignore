@@ -1,4 +1,4 @@
 *.o
 batv-milter
-batv-filter
+batv-validate
 batv-sign

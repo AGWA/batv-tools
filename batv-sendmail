@@ -1,0 +1,63 @@
+#!/bin/bash
+
+# This script works in both bash and ksh93.  It uses arrays and the getopts
+# builtin so it doesn't work in the Bourne shell.
+
+sender= # TODO: perhaps set a default sender based on $LOGNAME and /etc/mailname or FQDN?
+
+# relevant sendmail options:
+#  B:		body type 7bit or 8bitmime
+#  C:		config file
+#  F:		sender fullname
+#  f:		sender address
+#  i		ignore dots
+#  G		gateway submission ???
+#  h:		hop count ???
+#  L:		syslog label ???
+#  N:		DSN conditions ???
+#  n		don't do aliasing ???
+#  O:		set option ???
+#  o:		set option (important for -oi... but note syntax sometimes demands two args)
+#  R:		return limit ???
+#  r:		obsolete form of -f
+#  t		extract recips from header
+#  V:		original envelope ID
+#  v		verbose mode
+
+unset sendmail_options
+while getopts :B:C:F:f:ih:L:N:nO:o:R:r:tV:v CH
+do
+	case $CH in
+		"?")			echo "$0: Unknown option: $OPTARG" >&2
+					exit 2;;
+		f|r)			sender="$OPTARG";;
+		o)			sendmail_options+=("-$CH$OPTARG");;
+		B|C|F|h|L|N|O|R|V)	sendmail_options+=("-$CH" "$OPTARG");;
+		*)			sendmail_options+=("-$CH");;
+	esac
+done
+shift $((OPTIND - 1))
+
+if [[ -z $sender ]]
+then
+	echo "$0: Sender must be specified with -f" >&2
+	exit 2
+fi
+
+unset batv_options
+if [[ -n $BATV_DELIMITER ]]
+then
+	batv_options+=("-d" "$BATV_DEKIMITER")
+fi
+if [[ -n $BATV_KEY_FILE ]]
+then
+	batv_options+=("-k" "$BATV_KEY_FILE")
+fi
+if [[ -n $BATV_LIFETIME ]]
+then
+	batv_options+=("-l" "$BATV_LIFETIME")
+fi
+
+batv_sender=$(batv-sign "${batv_options[@]}" -- "$sender") || exit $?
+
+exec sendmail -f "$batv_sender" "${sendmail_options[@]}" -- "$@"

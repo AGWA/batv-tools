@@ -145,6 +145,6 @@ void	Email_address::parse (const char* str)
 
 std::string	Email_address::make_string () const
 {
-	return local_part + "@" + domain;
+	return domain.empty() ? local_part : local_part + "@" + domain;
 }
 

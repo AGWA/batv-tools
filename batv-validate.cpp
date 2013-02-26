@@ -46,7 +46,8 @@ namespace {
 		std::clog << "Options:" << std::endl;
 		std::clog << " -f                 -- filter message on stdin, add X-Batv-Status header" << std::endl;
 		std::clog << " -m                 -- read message from stdin, validate the recipient address" << std::endl;
-		std::clog << " -k KEY_MAP_FILE    -- path to key map file (default: ~/.batv-keys)" << std::endl;
+		std::clog << " -k KEY_FILE        -- path to key file (default: ~/.batv-key)" << std::endl;
+		std::clog << " -K KEY_MAP_FILE    -- path to key map file (default: ~/.batv-keys)" << std::endl;
 		std::clog << " -l LIFETIME        -- lifetime, in days, of BATV addresses (default: 7)" << std::endl;
 		std::clog << " -d SUB_ADDR_DELIM  -- sub address delimiter (default: +)" << std::endl;
 		std::clog << " -h RCPT_HEADER     -- envelope recipient header (for -f and -m mode)" << std::endl;
@@ -55,6 +56,7 @@ namespace {
 
 	struct Validate_config {
 		Key_map			keys;			// map from sender address/domain to their HMAC key
+		Key			default_key;		// key to use if address/domain not in key map
 		unsigned int		address_lifetime;	// in days, how long BATV address is valid
 		char			sub_address_delimiter;	// e.g. "+"
 		std::string		rcpt_header;		// e.g. "Delivered-To"
@@ -64,6 +66,11 @@ namespace {
 			address_lifetime = 7;
 			sub_address_delimiter = '+';
 			rcpt_header = "Delivered-To";
+		}
+
+		const Key*		get_key (const std::string& sender_address) const
+		{
+			return batv::get_key(keys, sender_address, !default_key.empty() ? &default_key : NULL);
 		}
 	};
 
@@ -168,7 +175,7 @@ namespace {
 				Batv_address		batv_rcpt;
 				if (batv_rcpt.parse(rcpt_to, config.sub_address_delimiter) && batv_rcpt.tag_type == "prvs") {
 					// Get the key for this sender:
-					const Key*	batv_rcpt_key = get_key(config.keys, batv_rcpt.orig_mailfrom.make_string());
+					const Key*	batv_rcpt_key = config.get_key(batv_rcpt.orig_mailfrom.make_string());
 					if (batv_rcpt_key != NULL) {
 						// A non-NULL key means this is a BATV sender.
 
@@ -213,10 +220,11 @@ try {
 	bool		is_filter = false;
 	bool		is_mail_input = false;
 	Validate_config	config;
+	std::string	key_file;
 	std::string	key_map_file;
 
 	int		flag;
-	while ((flag = getopt(argc, argv, "fmk:l:d:h:")) != -1) {
+	while ((flag = getopt(argc, argv, "fmk:K:l:d:h:")) != -1) {
 		switch (flag) {
 		case 'f':
 			is_filter = true;
@@ -225,6 +233,9 @@ try {
 			is_mail_input = true;
 			break;
 		case 'k':
+			key_file = optarg;
+			break;
+		case 'K':
 			key_map_file = optarg;
 			break;
 		case 'l':
@@ -246,6 +257,7 @@ try {
 		}
 	}
 
+	// Validate arguments
 	if (is_filter && is_mail_input) {
 		std::clog << argv[0] << ": can't specify both -f and -m" << std::endl;
 		print_usage(argv[0]);
@@ -265,20 +277,26 @@ try {
 		return 1;
 	}
 
-	if (key_map_file.empty()) {
-		if (const char* home_dir = std::getenv("HOME")) {
-			key_map_file = home_dir;
-		}
-		key_map_file += "/.batv-keys";
-	}
-	if (access(key_map_file.c_str(), R_OK) == -1) {
-		std::clog << argv[0] << ": " << key_map_file << ": " << strerror(errno) << std::endl;
+	// Load the default key and key map
+	check_personal_key_path(key_file, ".batv-key");
+	check_personal_key_path(key_map_file, ".batv-keys");
+
+	if (key_file.empty() && key_map_file.empty()) {
+		std::clog << argv[0] << ": Neither ~/.batv-key nor ~/.batv-keys exist." << std::endl;
+		std::clog << "Please create one and/or the other or specify alternative paths using -k or -K" << std::endl;
 		return 1;
 	}
 
-	std::ifstream	key_map_in(key_map_file.c_str());
-	load_key_map(config.keys, key_map_in);
+	if (!key_file.empty()) {
+		std::ifstream	key_in(key_file.c_str());
+		load_key(config.default_key, key_in);
+	}
+	if (!key_map_file.empty()) {
+		std::ifstream	key_map_in(key_map_file.c_str());
+		load_key_map(config.keys, key_map_in);
+	}
 
+	// Do the validation/filtering
 	if (is_filter) {
 		filter(config, std::cin, std::cout);
 
@@ -314,7 +332,7 @@ try {
 			}
 
 			// Get the key for this sender:
-			const Key*	batv_rcpt_key = get_key(config.keys, batv_rcpt.orig_mailfrom.make_string());
+			const Key*	batv_rcpt_key = config.get_key(batv_rcpt.orig_mailfrom.make_string());
 			if (batv_rcpt_key == NULL) {
 				// No key for this sender
 				errors << argv[0] << ": " << batv_rcpt.orig_mailfrom.make_string() << ": No key available for this sender" << std::endl;

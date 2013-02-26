@@ -63,7 +63,7 @@ void	batv::load_key_map (Key_map& key_map, std::istream& in)
 	}
 }
 
-const Key* batv::get_key (const Key_map& keys, const std::string& sender_address)
+const Key* batv::get_key (const Key_map& keys, const std::string& sender_address, const Key* default_key)
 {
 	Key_map::const_iterator		it;
 
@@ -82,6 +82,6 @@ const Key* batv::get_key (const Key_map& keys, const std::string& sender_address
 		}
 	}
 
-	return NULL;
+	return default_key;
 }
 

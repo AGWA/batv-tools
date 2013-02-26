@@ -27,4 +27,6 @@ namespace batv {
 
 		explicit Config_error (const std::string& m) : message(m) { }
 	};
+
+	void check_personal_key_path (std::string& path, const char* filename);
 }

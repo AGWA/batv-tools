@@ -38,23 +38,29 @@ namespace {
 		std::clog << "Usage: " << argv0 << " [OPTIONS...] FROM_ADDRESS" << std::endl;
 		std::clog << "Options:" << std::endl;
 		std::clog << " -k KEY_FILE        -- path to key file (default: ~/.batv-key)" << std::endl;
+		std::clog << " -K KEY_MAP_FILE    -- path to key map file (default: ~/.batv-keys)" << std::endl;
 		std::clog << " -l LIFETIME        -- lifetime, in days, of BATV address (default: 7)" << std::endl;
 		std::clog << " -d SUB_ADDR_DELIM  -- sub address delimiter (default: +)" << std::endl;
 	}
 }
 
 int main (int argc, char** argv)
-{
+try {
 	char		sub_address_delimiter = '+';
 	unsigned int	address_lifetime = 7;
 	Key		key;
 	std::string	key_file;
+	Key_map		key_map;
+	std::string	key_map_file;
 
 	int		flag;
-	while ((flag = getopt(argc, argv, "k:l:d:")) != -1) {
+	while ((flag = getopt(argc, argv, "k:K:l:d:")) != -1) {
 		switch (flag) {
 		case 'k':
 			key_file = optarg;
+			break;
+		case 'K':
+			key_map_file = optarg;
 			break;
 		case 'l':
 			address_lifetime = std::atoi(optarg);
@@ -88,17 +94,41 @@ int main (int argc, char** argv)
 			key_file = home_dir;
 		}
 		key_file += "/.batv-key";
-	}
-	if (access(key_file.c_str(), R_OK) == -1) {
+		if (access(key_file.c_str(), R_OK) == -1) {
+			if (errno != ENOENT) {
+				std::clog << argv[0] << ": " << key_file << ": " << strerror(errno) << std::endl;
+				return 1;
+			}
+			key_file.clear();
+		}
+	} else if (access(key_file.c_str(), R_OK) == -1) {
 		std::clog << argv[0] << ": " << key_file << ": " << strerror(errno) << std::endl;
 		return 1;
 	}
 
-	try {
+	check_personal_key_path(key_file, ".batv-key");
+	check_personal_key_path(key_map_file, ".batv-keys");
+
+	if (key_file.empty() && key_map_file.empty()) {
+		std::clog << argv[0] << ": Neither ~/.batv-key nor ~/.batv-keys exist." << std::endl;
+		std::clog << "Please create one and/or the other or specify alternative paths using -k or -K" << std::endl;
+		return 1;
+	}
+
+	// Load the key and key map
+	if (!key_file.empty()) {
 		std::ifstream	key_in(key_file.c_str());
 		load_key(key, key_in);
-	} catch (const Config_error& e) {
-		std::clog << argv[0] << ": " << e.message << std::endl;
+	}
+	if (!key_map_file.empty()) {
+		std::ifstream	key_map_in(key_map_file.c_str());
+		load_key_map(key_map, key_map_in);
+	}
+	
+	// Determine what key to use to sign this message
+	const Key*		use_key = get_key(key_map, argv[optind], !key.empty() ? &key : NULL);
+	if (!use_key) {
+		std::clog << argv[0] << ": " << argv[optind] << ": No key available for this sender" << std::endl;
 		return 1;
 	}
 
@@ -110,7 +140,11 @@ int main (int argc, char** argv)
 		return 1;
 	}
 
-	std::cout << prvs_generate(from_address, address_lifetime, key).make_string(sub_address_delimiter) << std::endl;
+	std::cout << prvs_generate(from_address, address_lifetime, *use_key).make_string(sub_address_delimiter) << std::endl;
 	return 0;
+
+} catch (const Config_error& e) {
+	std::clog << argv[0] << ": " << e.message << std::endl;
+	return 1;
 }
 

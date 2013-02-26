@@ -18,5 +18,27 @@
  */
 
 #include "common.hpp"
+#include <unistd.h>
+#include <cstdlib>
+#include <errno.h>
+#include <string.h>
 
 using namespace batv;
+
+void batv::check_personal_key_path (std::string& path, const char* filename)
+{
+	if (path.empty()) {
+		if (const char* home_dir = std::getenv("HOME")) {
+			path = home_dir;
+		}
+		path.append("/").append(filename);
+		if (access(path.c_str(), R_OK) == -1) {
+			if (errno != ENOENT) {
+				throw Config_error(path + ": " + strerror(errno));
+			}
+			path.clear();
+		}
+	} else if (access(path.c_str(), R_OK) == -1) {
+		throw Config_error(path + ": " + strerror(errno));
+	}
+}

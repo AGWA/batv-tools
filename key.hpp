@@ -31,7 +31,9 @@ namespace batv {
 	void		load_key (Key& key, std::istream& key_file_in);
 	void		load_key_map (Key_map& key_map, std::istream& key_map_file_in);
 
-	// Get HMAC key for given sender from the key map (return NULL if not in key map):
-	const Key*	get_key (const Key_map&, const std::string& sender_address);
+	// Get HMAC key for given sender from the key map:
+	//  returns default_key (which is NULL by default) if sender is not in map.
+	//  returns NULL if sender is in map with an empty key
+	const Key*	get_key (const Key_map&, const std::string& sender_address, const Key* default_key =NULL);
 }
 

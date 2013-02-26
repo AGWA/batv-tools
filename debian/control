@@ -5,14 +5,26 @@ Priority: extra
 Standards-Version: 3.9.1
 Build-Depends: debhelper (>= 8), make (>= 3.81-5), libc6-dev (>= 2.7-18), gcc (>= 4:4.3.2-2), coreutils (>= 6.10-6), libssl-dev (>= 0.9.8o-4), libmilter-dev (>= 8.14.3-9.4)
 
-Package: batv-filter
+Package: batv-tools
 Architecture: any
 Depends: ${shlibs:Depends}, ${misc:Depends}
-Description: Standalone filter for Bounce Address Tag Validation
- batv-filter does stuff.
+Description: Standalone tools for Bounce Address Tag Validation
+ Bounce Address Tag Validation (BATV) is a method for detecting and blocking
+ backscatter.  It works by embedding a cryptographic token in the envelope
+ sender of all outgoing mail, and checking incoming bounces for a valid token.
+ This package contains standalone tools that enable individual users to
+ use BATV.  System administrators should see the batv-milter package for a
+ solution that can be integrated with the system's MTA.
 
 Package: batv-milter
 Architecture: any
 Depends: ${shlibs:Depends}, ${misc:Depends}, adduser
+Recommends: batv-tools
 Description: Milter (mail filter) for Bounce Address Tag Validation
- batv-milter does stuff.
+ Bounce Address Tag Validation (BATV) is a method for detecting and blocking
+ backscatter.  It works by embedding a cryptographic token in the envelope
+ sender of all outgoing mail, and checking incoming bounces for a valid token.
+ This package contains a milter implementation of BATV that can be integrated
+ with a milter-compatible MTA such as Postfix or Sendmail to provide BATV to
+ an entire domain of users.  Individual users should see the batv-tools package
+ for a solution that does not require involvement of the system administrator.

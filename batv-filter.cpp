@@ -41,14 +41,12 @@ namespace {
 		unsigned int		address_lifetime;	// in days, how long BATV address is valid
 		char			sub_address_delimiter;	// e.g. "+"
 		std::string		rcpt_header;		// e.g. "Delivered-To"
-		bool			is_mbox;		// input is in mbox format i.e. starts with "From " line
 
 		Filter_config ()
 		{
 			address_lifetime = 7;
 			sub_address_delimiter = '+';
 			rcpt_header = "Delivered-To";
-			is_mbox = true;
 		}
 	};
 
@@ -57,29 +55,19 @@ namespace {
 		explicit Input_error (const std::string& m) : message(m) { }
 	};
 
-	bool read_header (std::istream& in, std::string& name, std::string& value)
+	void parse_header (const std::string& first_line, std::istream& in, std::string& name, std::string& value)
 	{
-		if (in.peek() == -1) {
-			throw Input_error("Premature end of message headers");
-		}
-		if (in.peek() == '\n') {
-			return false;
-		}
-
-		// Read first line of header
-		std::string		line;
-		std::getline(in, line);
-		if (line[0] == ' ' || line[0] == '\t') {
+		if (first_line[0] == ' ' || first_line[0] == '\t') {
 			throw Input_error("Malformed message headers: unexpected continuation header");
 		}
 
 		// Parse first line of header
-		std::string::size_type	colon_pos = line.find(':');
+		std::string::size_type	colon_pos = first_line.find(':');
 		if (colon_pos == std::string::npos) {
 			throw Input_error("No colon in message header line");
 		}
-		name = line.substr(0, colon_pos);
-		value = line.substr(colon_pos + 1);
+		name = first_line.substr(0, colon_pos);
+		value = first_line.substr(colon_pos + 1);
 
 		// Read in continuation lines, if any
 		while (in.peek() == ' ' || in.peek() == '\t') {
@@ -87,8 +75,6 @@ namespace {
 			std::getline(in, line);
 			value.append("\n").append(line);
 		}
-
-		return true;
 	}
 
 	const char* after_ws (const char* p)
@@ -99,21 +85,26 @@ namespace {
 
 	void filter (const Filter_config& config, std::istream& in, std::ostream& out)
 	{
-		if (config.is_mbox) {
-			// Pass through the "From " line
-			std::string	from_line;
-			std::getline(in, from_line);
-			if (std::strncmp(from_line.c_str(), "From ", 5) != 0) {
-				throw Input_error("Message does not start with mbox From line.  Use -r option if input is not in mbox format.");
-			}
-			out << from_line << '\n';
-		}
+		bool	done = false;	// becomes true when we've processed the envelope recipient
+		bool	first = true;	// becomes false after the first line of input
+		while (in.peek() != -1 && in.peek() != '\n') {
+			// Read first line of header
+			std::string		first_line;
+			std::getline(in, first_line);
 
-		// Process headers
-		std::string	name;
-		std::string	value;
-		bool		done = false;
-		while (read_header(in, name, value)) {
+			if (first && std::strncmp(first_line.c_str(), "From ", 5) == 0) {
+				// The input must be in mbox format.  Pass through the "From " line.
+				out << first_line << '\n';
+				first = false;
+				continue;
+			}
+
+			// Parse the header, possibly reading in continuation lines
+			std::string	name;
+			std::string	value;
+			parse_header(first_line, in, name, value);
+
+			// Process the header
 			if (strcasecmp(name.c_str(), "X-Batv-Status") == 0) {
 				// Remove this header to prevent malicious senders from faking us out
 
@@ -155,6 +146,9 @@ namespace {
 				// Copy through this header unmodified
 				out << name << ':' << value << '\n';
 			}
+
+
+			first = false;
 		}
 
 		// Copy through the message body
@@ -168,7 +162,7 @@ int main (int argc, char** argv)
 	std::string	key_map_file;
 
 	int		flag;
-	while ((flag = getopt(argc, argv, "k:l:d:h:r")) != -1) {
+	while ((flag = getopt(argc, argv, "k:l:d:h:")) != -1) {
 		switch (flag) {
 		case 'k':
 			key_map_file = optarg;
@@ -186,9 +180,6 @@ int main (int argc, char** argv)
 		case 'h':
 			config.rcpt_header = optarg;
 			break;
-		case 'r':
-			config.is_mbox = false;
-			break;
 		default:
 			std::clog << "Usage: " << argv[0] << " [OPTIONS...]" << std::endl;
 			std::clog << "Options:" << std::endl;
@@ -196,7 +187,6 @@ int main (int argc, char** argv)
 			std::clog << " -l LIFETIME        -- lifetime, in days, of BATV addresses (default: 7)" << std::endl;
 			std::clog << " -d SUB_ADDR_DELIM  -- sub address delimiter (default: +)" << std::endl;
 			std::clog << " -h RCPT_HEADER     -- envelope recipient header (default: Delivered-To)" << std::endl;
-			std::clog << " -r                 -- input is a raw (non-mbox) message (default: no)" << std::endl;
 			return 2;
 		}
 	}

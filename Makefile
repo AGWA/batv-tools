@@ -29,9 +29,14 @@ batv-sign: $(COMMON_OBJFILES) batv-sign.o
 clean:
 	rm -f *.o $(PROGRAMS)
 
-install:
-	install -m 755 batv-milter $(PREFIX)/sbin/
+install: install-tools install-milter
+
+install-tools:
 	install -m 755 batv-validate $(PREFIX)/bin/
 	install -m 755 batv-sign $(PREFIX)/bin/
+	install -m 755 batv-sendmail $(PREFIX)/bin/
 
-.PHONY: all clean install
+install-milter:
+	install -m 755 batv-milter $(PREFIX)/sbin/
+
+.PHONY: all all-tools all-milter clean install install-tools install-milter

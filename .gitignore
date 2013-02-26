@@ -1,3 +1,4 @@
 *.o
 batv-milter
 batv-filter
+batv-sign

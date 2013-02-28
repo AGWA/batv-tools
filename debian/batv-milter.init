@@ -25,7 +25,7 @@ if [ -f /etc/default/batv-milter ] ; then
 	. /etc/default/batv-milter
 fi
 
-DAEMON_OPTS="--config /etc/batv-milter.conf --pid-file $PIDFILE --daemon yes $DAEMON_OPTS"
+DAEMON_OPTS="--config /etc/batv-milter.conf --pid-file $PIDFILE --daemon yes --user $USER --group $GROUP $DAEMON_OPTS"
 
 start() {
 	# Return
@@ -36,8 +36,8 @@ start() {
 	if [ ! -d $RUNDIR ]; then
 		install -o $USER -g $GROUP -m 2755 -d $RUNDIR || return 2
 	fi
- 	start-stop-daemon --start --quiet --pidfile $PIDFILE --user $USER --name $NAME --chuid $USER --startas $DAEMON --test > /dev/null || return 1
- 	start-stop-daemon --start --quiet --pidfile $PIDFILE --user $USER --name $NAME --chuid $USER --startas $DAEMON -- $DAEMON_OPTS || return 2
+ 	start-stop-daemon --start --quiet --pidfile $PIDFILE --user $USER --name $NAME --startas $DAEMON --test > /dev/null || return 1
+ 	start-stop-daemon --start --quiet --pidfile $PIDFILE --user $USER --name $NAME --startas $DAEMON -- $DAEMON_OPTS || return 2
 }
 
 stop() {

@@ -24,6 +24,7 @@
 #include "common.hpp"
 #include "openssl-threads.hpp"
 #include <iostream>
+#include <signal.h>
 #include <fstream>
 #include <fcntl.h>
 #include <unistd.h>
@@ -290,6 +291,9 @@ int main (int argc, const char** argv)
 	}
 	config = &main_config;
 
+	// Set reasonable signal handlers
+	signal(SIGCHLD, SIG_DFL);
+	signal(SIGPIPE, SIG_IGN);
 
 
 	struct smfiDesc		milter_desc;

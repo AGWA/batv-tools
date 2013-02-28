@@ -40,6 +40,8 @@ namespace batv {
 		bool			daemon;
 		int			debug;
 		std::string		pid_file;
+		std::string		user_name;
+		std::string		group_name;
 		std::string		socket_spec;
 		int			socket_mode;		// or -1 to use the umask
 		bool			do_sign;

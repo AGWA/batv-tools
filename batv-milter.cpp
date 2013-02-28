@@ -327,48 +327,12 @@ int main (int argc, const char** argv)
 		conn_spec = config->socket_spec;
 	}
 
+	// Drop privileges
+	drop_privileges(config->user_name, config->group_name);
+
 	// Daemonize, if applicable
 	if (config->daemon) {
-		// Open the PID file (open before forking so we can report errors)
-		std::ofstream	pid_out;
-		if (!config->pid_file.empty()) {
-			pid_out.open(config->pid_file.c_str(), std::ofstream::out | std::ofstream::trunc);
-			if (!pid_out) {
-				std::clog << "Unable to open PID file " << config->pid_file << " for writing." << std::endl;
-				return 1;
-			}
-		}
-
-		pid_t		pid = fork();
-		if (pid == -1) {
-			std::clog << "fork: " << strerror(errno) << std::endl;
-			return 1;
-		}
-		if (pid != 0) {
-			// Exit parent
-			return 0;
-		}
-		setsid();
-		
-		// Write the PID file now that we've forked
-		if (pid_out) {
-			pid_out << getpid() << '\n';
-			pid_out.close();
-		}
-
-		// dup stdin, stdout, stderr to /dev/null
-		if (isatty(0) || errno == EBADF) {
-			close(0);
-			open("/dev/null", O_RDONLY);
-		}
-		if (isatty(1) || errno == EBADF) {
-			close(1);
-			open("/dev/null", O_WRONLY);
-		}
-		if (isatty(2) || errno == EBADF) {
-			close(2);
-			open("/dev/null", O_WRONLY);
-		}
+		daemonize(config->pid_file, "");
 	}
 
 	if (config->socket_mode != -1) {

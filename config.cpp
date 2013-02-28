@@ -129,6 +129,10 @@ void	Config::set (const std::string& directive, const std::string& value)
 		debug = std::atoi(value.c_str());
 	} else if (directive == "pid-file") {
 		pid_file = value;
+	} else if (directive == "user") {
+		user_name = value;
+	} else if (directive == "group") {
+		group_name = value;
 	} else if (directive == "config") {
 		// Include another config file
 		std::ifstream	config_in(value.c_str());

@@ -222,7 +222,14 @@ namespace {
 				}
 
 				if (smfi_addheader(ctx, const_cast<char*>("X-Batv-Status"), const_cast<char*>(status)) == MI_FAILURE) {
-					std::clog << "on_eom: smfi_addheader failed" << std::endl;
+					std::clog << "on_eom: smfi_addheader failed (1)" << std::endl;
+					batv_ctx->clear_message_state();
+					return milter_status(config->on_internal_error);
+				}
+
+				// Add a X-Batv-Delivered-To header containing the envelope recipient, pre-rewrite
+				if (smfi_addheader(ctx, const_cast<char*>("X-Batv-Delivered-To"), const_cast<char*>(batv_ctx->batv_rcpt_string.c_str())) == MI_FAILURE) {
+					std::clog << "on_eom: smfi_addheader failed (2)" << std::endl;
 					batv_ctx->clear_message_state();
 					return milter_status(config->on_internal_error);
 				}

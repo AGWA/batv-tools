@@ -53,13 +53,13 @@
 using namespace batv;
 
 namespace {
-	const Config*		config;
+	const Config*			config;
 
 	struct Batv_context {
-		// Connection state:
-		bool		client_is_internal;
+		// Connection state (applicable to entire SMTP connection):
+		bool			client_is_internal;
 
-		// Message state:
+		// Message state (applicable only to the current message):
 		unsigned int		num_batv_status_headers;// number of existing X-Batv-Status headers in the message
 		Email_address		env_from; 		// the message's envelope sender
 		bool			is_batv_rcpt;		// is the message destined to a BATV address?
@@ -113,7 +113,7 @@ namespace {
 		} else if (hostaddr->sa_family == AF_INET6) {
 			batv_ctx->client_is_internal = config->is_internal_host(reinterpret_cast<struct sockaddr_in6*>(hostaddr)->sin6_addr);
 		} else {
-			// Unsupported socket family
+			// Unsupported socket family. Can't tell if client is internal.
 		}
 
 		return SMFIS_CONTINUE;
@@ -269,14 +269,14 @@ namespace {
 		if (Batv_context* batv_ctx = static_cast<Batv_context*>(smfi_getpriv(ctx))) {
 			batv_ctx->clear_message_state();
 		}
-		return SMFIS_CONTINUE; // return value doesn't matter
+		return SMFIS_CONTINUE; // return value doesn't matter in on_abort()
 	}
 	sfsistat on_close (SMFICTX* ctx)
 	{
 		if (config->debug) std::cerr << "on_close " << ctx << '\n';
 
 		delete static_cast<Batv_context*>(smfi_getpriv(ctx));
-		return SMFIS_CONTINUE; // return value doesn't matter
+		return SMFIS_CONTINUE; // return value doesn't matter in on_close()
 	}
 }
 
@@ -284,6 +284,8 @@ int main (int argc, const char** argv)
 {
 	Config		main_config;
 	try {
+		// Command line arguments come in pairs of the form "--name value" and correspond
+		// directly to the name/value option pairs in the config file (a la OpenVPN).
 		for (int i = 1; i < argc; i += 2) {
 			if (std::strncmp(argv[i], "--", 2) == 0 && i + 1 < argc) {
 				main_config.set(argv[i] + 2, argv[i+1]);
@@ -302,11 +304,10 @@ int main (int argc, const char** argv)
 	}
 	config = &main_config;
 
-	// Set reasonable signal handlers
 	signal(SIGCHLD, SIG_DFL);
 	signal(SIGPIPE, SIG_IGN);
 
-
+	// Populate the smfiDesc struct with details about this milter and the callbacks we use
 	struct smfiDesc		milter_desc;
 	std::memset(&milter_desc, '\0', sizeof(milter_desc));
 
@@ -329,6 +330,8 @@ int main (int argc, const char** argv)
 
 	std::string		conn_spec;
 	if (config->socket_spec[0] == '/') {
+		// If the socket starts with a /, assume it's a path to a UNIX
+		// domain socket and treat it specially.
 		if (access(config->socket_spec.c_str(), F_OK) == 0) {
 			std::clog << config->socket_spec << ": socket file already exists" << std::endl;
 			return 1;
@@ -338,10 +341,8 @@ int main (int argc, const char** argv)
 		conn_spec = config->socket_spec;
 	}
 
-	// Drop privileges
 	drop_privileges(config->user_name, config->group_name);
 
-	// Daemonize, if applicable
 	if (config->daemon) {
 		daemonize(config->pid_file, "");
 	}
@@ -354,7 +355,6 @@ int main (int argc, const char** argv)
 		umask(~config->socket_mode & 0777);
 	}
 
-	// Initialize the milter library
 	openssl_init_threads();
 
 	smfi_setdbg(config->debug);

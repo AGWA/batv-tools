@@ -47,7 +47,7 @@ fi
 unset batv_options
 if [[ -n $BATV_DELIMITER ]]
 then
-	batv_options+=("-d" "$BATV_DEKIMITER")
+	batv_options+=("-d" "$BATV_DELIMITER")
 fi
 if [[ -n $BATV_KEY_FILE ]]
 then

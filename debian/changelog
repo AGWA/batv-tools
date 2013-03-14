@@ -1,3 +1,9 @@
+batv-tools (0.2-2) unstable; urgency=low
+
+  * Include batv-sendmail in package
+
+ -- Andrew Ayer <agwa@andrewayer.name>  Wed, 13 Mar 2013 17:12:33 -0700
+
 batv-tools (0.2-1) unstable; urgency=low
 
   * batv-milter: set X-Batv-Delivered-To header

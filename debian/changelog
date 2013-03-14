@@ -1,3 +1,10 @@
+batv-tools (0.2-1) unstable; urgency=low
+
+  * batv-milter: set X-Batv-Delivered-To header
+  * Fix a typo in batv-sendmail
+
+ -- Andrew Ayer <agwa@andrewayer.name>  Wed, 13 Mar 2013 17:04:27 -0700
+
 batv-tools (0.1-2) unstable; urgency=low
 
   * Update copyright notice to include OpenSSL linking exception.

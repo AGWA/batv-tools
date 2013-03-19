@@ -1,4 +1,4 @@
 *.o
-batv-milter
-batv-validate
-batv-sign
+/batv-milter
+/batv-validate
+/batv-sign

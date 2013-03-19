@@ -1,3 +1,9 @@
+batv-tools (0.2-3) unstable; urgency=low
+
+  * Fix minor packaging bug
+
+ -- Andrew Ayer <agwa@andrewayer.name>  Tue, 19 Mar 2013 16:17:45 -0700
+
 batv-tools (0.2-2) unstable; urgency=low
 
   * Include batv-sendmail in package

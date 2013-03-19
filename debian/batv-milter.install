@@ -1,3 +1,3 @@
 batv-milter usr/sbin
-debian/batv-milter.conf /etc
-debian/batv-keys.conf /etc
+debian/batv-milter.conf etc
+debian/batv-keys.conf etc

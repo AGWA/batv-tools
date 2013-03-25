@@ -16,16 +16,18 @@ DESC="BATV Milter"
 RUNDIR=/var/run/$NAME
 USER=batv-milter
 GROUP=batv-milter
-PIDFILE=$RUNDIR/$NAME.pid
+CONFIG=/etc/batv-milter.conf
+INSTANCES=
 
 test -x $DAEMON || exit 0
 
 # Include batv-milter defaults if available
-if [ -f /etc/default/batv-milter ] ; then
+if [ -f /etc/default/batv-milter ]
+then
 	. /etc/default/batv-milter
 fi
 
-DAEMON_OPTS="--config /etc/batv-milter.conf --pid-file $PIDFILE --daemon yes --user $USER --group $GROUP $DAEMON_OPTS"
+DAEMON_OPTS="--daemon yes --user $USER --group $GROUP $DAEMON_OPTS"
 
 start() {
 	# Return
@@ -33,11 +35,13 @@ start() {
 	#   1 if daemon was already running
 	#   2 if daemon could not be started
 	# Create the run directory if it doesn't exist
-	if [ ! -d $RUNDIR ]; then
+	if [ ! -d $RUNDIR ]
+	then
 		install -o $USER -g $GROUP -m 2755 -d $RUNDIR || return 2
 	fi
+	PIDFILE=$RUNDIR/$1.pid
  	start-stop-daemon --start --quiet --pidfile $PIDFILE --user $USER --name $NAME --startas $DAEMON --test > /dev/null || return 1
- 	start-stop-daemon --start --quiet --pidfile $PIDFILE --user $USER --name $NAME --startas $DAEMON -- $DAEMON_OPTS || return 2
+	start-stop-daemon --start --quiet --pidfile $PIDFILE --user $USER --name $NAME --startas $DAEMON -- --config $CONFIG --pid-file $PIDFILE $DAEMON_OPTS || return 2
 }
 
 stop() {
@@ -46,34 +50,78 @@ stop() {
 	#   1 if daemon was already stopped
 	#   2 if daemon could not be stopped
 	#   other if a failure occurred
+	PIDFILE=$RUNDIR/$1.pid
 	start-stop-daemon --stop --quiet --retry=TERM/30/KILL/5 --pidfile $PIDFILE --name $NAME --user $USER
 	RETVAL="$?"
 	[ "$RETVAL" = 2 ] && return 2
-	# Many daemons don't delete their pidfiles when they exit.
-       	rm -f $PIDFILE
+	# In case PID file isn't properly deleted:
+	rm -f $PIDFILE
 	return "$RETVAL"
 }
 
-case "$1" in
+start_multi () {
+	for instance
+	do
+		CONFIG=/etc/batv-milter-$instance.conf
+		start $instance || return $?
+		echo -n "$instance "
+	done
+}
+
+command=$1
+shift
+
+case "$command" in
   start)
 	echo -n "Starting $DESC: "
-	start || exit $?
-	echo "$NAME."
+	if [ $# -eq 0 ] && [ "$INSTANCES" = "" ]
+	then
+		# Normal operation - start the single default instance
+		# (The config file is specified by the $CONFIG variable, which
+		# defaults to /etc/batv-milter.conf and can be overridden in
+		# /etc/default/batv-milter.)
+		start batv-milter || exit $?
+		echo -n "batv-milter"
+	elif [ $# -eq 0 ]
+	then
+		# Start the instances specified in the $INSTANCES variable
+		start_multi $INSTANCES || exit $?
+	else
+		# Start the instances specified on the command line
+		start_multi "$@" || exit $?
+	fi
+	echo "."
 	;;
   stop)
 	echo -n "Stopping $DESC: "
-	stop
-	echo "$NAME."
+	if [ $# -eq 0 ]
+	then
+		# Stop all running instances
+		for pidfile in $RUNDIR/*.pid
+		do
+			if [ -e $pidfile ]
+			then
+				instance=`basename $pidfile .pid`
+				stop $instance
+				echo -n "$instance "
+			fi
+		done
+	else
+		# Stop the instances specified on the command line
+		for instance
+		do
+			stop $instance
+			echo -n "$instance "
+		done
+	fi
+	echo "."
 	;;
   restart|force-reload)
-	echo -n "Restarting $DESC: "
-	stop
-	start || exit $?
-	echo "$NAME."
+	$0 stop "$@"
+	$0 start "$@" || exit $?
 	;;
   *)
-	N=/etc/init.d/$NAME
-	echo "Usage: $N {start|stop|restart|force-reload}" >&2
+	echo "Usage: $0 {start|stop|restart|force-reload}" >&2
 	exit 1
 	;;
 esac

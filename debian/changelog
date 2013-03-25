@@ -1,3 +1,10 @@
+batv-tools (0.2-4) unstable; urgency=low
+
+  * Enhance init script to optionally support multiple instances of
+    batv-milter.
+
+ -- Andrew Ayer <agwa@andrewayer.name>  Sun, 24 Mar 2013 18:15:58 -0700
+
 batv-tools (0.2-3) unstable; urgency=low
 
   * Fix minor packaging bug

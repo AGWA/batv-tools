@@ -23,7 +23,7 @@ email me (see the AUTHORS file).
 
    If you use sub-addressing instead (as batv-tools optionally supports), these
    problems go away, making BATV quite a bit easier to implement and deploy.
-   See subaddress_metasyntax.txt for more details.
+   See the "SUB-ADDRESS META-SYNTAX" section of the README for more details.
 
 2. The PRVS syntax should either contain the date the address was *signed* (not
    the date it *expires*) OR the means of doing the modular arithmetic should be

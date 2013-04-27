@@ -1,0 +1,104 @@
+This document describes how a mail system administrator can get up and
+running with the BATV milter.  If you're an individual user looking to
+use BATV for yourself, see quickstart.standalone.txt.
+
+If you have installed the Debian package for batv-milter,
+consult README.Debian instead, as some of these steps have been
+automated/simplified for you.
+
+0. GENERATE A KEY
+
+	First you need to generate a cryptographic key:
+
+		batv-keygen -f /etc/batv-key
+
+	You may wish to use a separate key for each domain you administer,
+	in which case you can generate multiple keys with distinct
+	filenames.  The filenames don't matter (you configure them using
+	the "key map" mechanism described below).
+
+
+1. CONFIGURE batv-milter
+
+	batv-milter is configured with a configuration file whose path
+	you specify using the --config command line option.  You can start
+	with the example configuration file in examples/batv-milter.conf.
+
+	The options are documented in milter.txt. The most important
+	options are:
+
+		socket -- the path to the milter socket file.  You need
+		to place the socket file in a directory that exists
+		and can be accessed by your MTA.  If you use Postfix
+		chroot'd, you should put it somewhere under the chroot
+		(typically /var/spool/postfix).
+
+		key-map -- the path to the key map file, described below.
+
+		internal-host -- specifies an IP address or subnet which
+		is considered "internal."  This option can be specified
+		multiple times, once for each internal host/subnet.
+		Only mail originating from these hosts/subnets (or from
+		authenticated senders) is signed with BATV.
+
+		sub-address-delimiter -- use the non-standard BATV
+		meta syntax based on sub-addressing using the given
+		sub-address delimiter (typically '+').  This syntax is
+		recommended because it has several advantages over the
+		standard syntax, as described in README.
+
+		user, group -- the user and group which batv-milter
+		should run as.  It is highly recommended that you run
+		batv-milter as a non-root user.
+
+
+2. CONFIGURE YOUR KEY MAP FILE
+
+	The key map (whose path is specified by the key-map option,
+	typically set to /etc/batv-keys.conf) maps senders to key files.
+	You can specify either an entire email address or just a domain
+	name.  The following key map file instructs batv-milter to sign
+	all outgoing mail from example.com using the key in /etc/batv-key:
+
+		@example.com /etc/batv-key
+
+
+3. CONFIGURE YOUR MTA
+
+	Configure your MTA to use the milter at the socket path specified
+	in your batv-milter configuration file.  If your MTA is running
+	chroot'd, be sure to specify a path relative to the chroot
+	directory.  Make sure your MTA uses the milter for both SMTP
+	and for locally-originated mail.  With Postfix, this requires
+	adding the milter to both 'smtpd_milters' and 'non_smtpd_milters'.
+
+	Example for Postfix, assuming a /var/spool/postfix chroot:
+
+		smtpd_milters = unix:/batv-milter/batv-milter.sock
+		non_smtpd_milters = unix:/batv-milter/batv-milter.sock
+
+	Your MTA needs read and write access to the milter socket file.
+	You can accomplish this by running batv-milter as the same user
+	as your MTA, or by adding your MTA user to the group which
+	batv-milter runs as, and setting batv-milter's 'socket-mode'
+	option to 660 to ensure the socket is group-accessible.
+
+
+4. (RE)START THE DAEMONS
+
+	Start the batv-milter daemon by running:
+	
+		batv-milter --config /path/to/config
+	
+	Make sure this runs when the system boots.
+
+	Restart postfix so it starts using the milter.
+
+
+5. FILTER BACKSCATTER
+
+	The milter does NOT reject any incoming mail; it simply validates
+	and rewrites BATV addresses, placing the result of the validation
+	in the X-Batv-Status header.  See filtering.txt for tips and
+	examples for filtering backscatter based on this header.
+

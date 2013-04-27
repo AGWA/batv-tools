@@ -1,0 +1,34 @@
+The following are my (Andrew Ayer's) critiques of the BATV draft standard.
+This list is brief; I'm happy to expand on any of these points if you
+email me (see the AUTHORS file).
+
+1. The meta syntax should use sub-addressing, much like VERP.
+
+   Problems with the draft's meta-syntax:
+
+	* It prevents BATV from being implemented at the MUA or MDA
+	  (i.e. procmail) level, which makes BATV harder to adopt, since it's
+	  easier to make changes at the MUA/MDA level than at the MTA level.
+
+	* Backup MX servers need to know not only the list of valid recipients,
+	  but also need to support BATV.
+
+	* If you're using a milter, Postfix's reject_unlisted_recipient check
+	  gets in the way because the recipient doesn't appear to exist.
+	
+	* In Postfix, locally-generated bounces don't go through the normal
+	  mail pipeline, so it's a challenge to ensure their BATV envelope
+	  recipients are properly rewritten to deliverable addresses.  See
+	  "Bounces and Cleanup" here: http://babel.de/batv.html
+
+   If you use sub-addressing instead (as batv-tools optionally supports), these
+   problems go away, making BATV quite a bit easier to implement and deploy.
+   See subaddress_metasyntax.txt for more details.
+
+2. The PRVS syntax should either contain the date the address was *signed* (not
+   the date it *expires*) OR the means of doing the modular arithmetic should be
+   precisely specified in the standard so there's no ambiguity whether a date
+   should be considered wrapped-around and expired, or not yet expired.
+
+3. The standardization effort appears to have died in 2008 (it's 2013 now) so
+   there's probably no hope of this ever becoming a standard.

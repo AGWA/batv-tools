@@ -283,6 +283,8 @@ namespace {
 		if (config->debug) std::cerr << "on_close " << ctx << '\n';
 
 		delete static_cast<Batv_context*>(smfi_getpriv(ctx));
+		smfi_setpriv(ctx, NULL); // this shouldn't matter because we never access the private
+					 // data again but libmilter complains if it's not NULL'ed out.
 		return SMFIS_CONTINUE; // return value doesn't matter in on_close()
 	}
 }

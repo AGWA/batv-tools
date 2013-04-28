@@ -22,6 +22,9 @@ of standalone tools (batv-sign, batv-validate, batv-sendmail) that
 do signing and validation.  The standalone tools enable individual
 users to use BATV without the involvement of their system administrators.
 
+batv-tools was written by Andrew Ayer <agwa at andrewayer dot name>.
+For more information, see <http://www.agwa.name/projects/batv-tools>.
+
 
 HOW BATV-TOOLS WORKS
 
@@ -64,7 +67,7 @@ headers for OpenSSL and libmilter.
 
 CURRENT STATUS
 
-The current version of batv-tools is 0.2, released on 2013-03-13.
+The current version of batv-tools is 0.3, released on 2013-04-27.
 batv-tools aims to be bug-free and reliable, meaning it shouldn't crash,
 malfunction, or do horrible things to your mail.  However, it has not
 yet reached maturity, meaning it is not as documented, featureful, or

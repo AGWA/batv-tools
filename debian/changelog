@@ -1,3 +1,9 @@
+batv-tools (0.4-1) unstable; urgency=low
+
+  * New upstream release.
+
+ -- Andrew Ayer <agwa@andrewayer.name>  Tue, 28 May 2013 10:22:56 -0700
+
 batv-tools (0.2-4) unstable; urgency=low
 
   * Enhance init script to optionally support multiple instances of

@@ -1,0 +1,96 @@
+This document describes how a non-administrative user can get up and
+running with BATV using the standalone tools.  If you're an administrator
+looking to configure the BATV milter, see quickstart.milter.txt.
+
+
+0. REQUIREMENTS
+
+	1. You must use an email service provider that supports
+	   sub-addressing (also known as "plus" addressing).  This guide
+	   assumes your email provider uses the '+' character as the
+	   sub-address delimiter.  Consult the documentation for the
+	   individual 'batv-' commands if your provider uses a different
+	   character.
+
+	2. You must be able to configure your MUA to send mail using
+	   a custom sendmail-compatible command.  Most MUAs can do this.
+
+	3. You must be able to filter your incoming mail through an
+	   arbitrary command.  If you use procmail you can do this.
+
+	4. Your MTA must add a header to incoming messages that contains
+	   the envelope recipient.  Postfix uses the 'Delivered-To'
+	   header.
+
+
+1. GENERATE A KEY
+
+	Run this command to generate a key in ~/.batv-key:
+
+		batv-keygen
+
+
+2. CONFIGURE YOUR MUA TO USE batv-sendmail
+
+	Configure your MUA to send mail using this command:
+
+		batv-sendmail -f YOURADDRESS ARGS...
+
+	where YOURADDRESS is your email address (e.g. andrew@example.com)
+	and ARGS... are additional arguments to sendmail that your MUA
+	normally sends (e.g. -i and -t).
+
+	If you use pine/alpine, this is what you must add to ~/.pinerc:
+
+		sendmail-path=batv-sendmail -f YOURADDRESS -t -i
+
+	If you use mutt, this is what you must add to ~/.muttrc:
+
+		set sendmail = "batv-sendmail -f YOURADDRESS -i"
+
+	For other MUAs, consult the documentation.
+
+
+3. FILTER INCOMING BOUNCES THROUGH batv-validate
+
+	You should filter all incoming bounces (i.e. those with a null
+	Return-Path) through the 'batv-validate -f' command, and then
+	discard bounces lacking a 'X-Batv-Status: valid' header.
+
+	If you use procmail, you can accomplish this with the following
+	recipe in ~/.procmailrc:
+
+	:0
+	* ^Return-Path: <>
+	{
+		:0hfw
+		| batv-validate -f -h Delivered-To
+
+		:0a:
+		* !^X-Batv-Status: valid
+		/dev/null
+	}
+
+	The -h flag to batv-validate specifies the name of the header
+	containing the envelope recipient.  'Delivered-To' is the header
+	used by Postfix.  Consult your MTA's documentation to determine
+	the header name.
+
+	batv-validate adds the header 'X-Batv-Status: valid' if the
+	message has a valid BATV recipient address.  You can match on
+	this header using a later procmail recipe.  In the example above,
+	procmail sends bounces lacking this header to /dev/null.  You may
+	wish to quarantine such messages in a separate mailbox instead.
+
+
+ADVANCED CONFIGURATION
+
+	Consult the usage messages for the individual 'batv-' tools
+	(e.g. 'batv-validate -?') to learn about advanced configuration
+	topics such as:
+
+		* Specifying a different sub-address delimiter
+		* Using a different key for different addresses
+		* Configuring the lifetime of BATV signatures (defaults
+		  to 7 days)
+

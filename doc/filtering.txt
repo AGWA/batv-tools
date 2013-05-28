@@ -1,0 +1,57 @@
+batv-tools does not itself identify bounces or discard or reject any mail.
+It is up to the user to identify bounces and filter those which lack a
+'X-Batv-Status: valid' header.
+
+batv-tools is designed this way to give the user maximum flexibility,
+since some users may prefer to quarantine backscatter, while others may
+prefer to discard it.  batv-tools avoids hard-coding bounce detection
+logic, since some users may wish to use BATV to filter bounce-like
+messages that don't have a null envelope sender, such as some vacation
+auto-replies.  Letting the user control this detection logic (for example,
+with procmail) is more reasonable than including detection logic for
+every possible bounce-like message in batv-tools.
+
+In general, you want to filter any message which has a 'Return-Path: <>'
+header that *doesn't* have a 'X-Batv-Status: valid' header.  Note that
+matching 'X-Batv-Status: invalid' is insufficient, since a bounce which
+wasn't addressed to a BATV address at all won't have a X-Batv-Status
+header.
+
+Make sure you apply your filtering *after* batv-milter/batv-validate
+has run, so you're sure the X-Batv-Status header has been added.
+
+
+FILTERING USING PROCMAIL
+
+The following procmail recipe can be used to filter bounces that have
+been identified as backscatter by batv-tools:
+
+	:0:
+	* ^Return-Path: <>
+	* !^X-Batv-Status: valid
+	/dev/null
+
+You may of course choose to quarantine backscatter in a mailbox instead
+of sending it to /dev/null.
+
+
+FILTERING USING SPAMASSASSIN
+
+The following SpamAssassin rules can be used to filter bounces that
+have been identified as backscatter by batv-tools.  These rules assign a
+score of 10 to backscatter. You can adjust this number to suit your fancy.
+
+header BATV_VALID               X-Batv-Status =~ /^valid$/
+score BATV_VALID                -0.001
+describe BATV_VALID             Message has a valid BATV signature
+
+header __BOUNCE                 Return-Path:addr =~ /^$/
+meta BACKSCATTER                __BOUNCE && !BATV_VALID
+describe BACKSCATTER            Bounce is bogus because it lacks valid BATV sig
+score BACKSCATTER               10
+
+Warning: the BACKSCATTER rule doesn't work when SpamAssassin is run from
+spamass-milter because the Return-Path header does not exist at that
+point.  As a result, the BACKSCATTER rule triggers even for non-bounces.
+Avoid using this rule from spamass-milter.
+

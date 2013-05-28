@@ -1,0 +1,50 @@
+#!/bin/sh -e
+
+PROGNAME=`basename "$0"`
+USAGE="$PROGNAME [-f KEYFILE]"
+
+if [ `id -u` -ne 0 ]
+then
+	# If we're not root, default to generating a personal key
+	keyfile=$HOME/.batv-key
+else
+	# If we're root, require a key path be explicitly specified on the command line with -f
+	keyfile=
+fi
+BITS=64
+
+while [ $# -gt 0 ]
+do
+	case $1 in
+	-f)	if [ $# -lt 2 ]
+		then
+			echo "$PROGNAME: -f requires a value" >&2
+			exit 2
+		fi
+		shift
+		keyfile=$1
+		;;
+	*)	echo "$PROGNAME: unknown flag $1" >&2
+		echo "Usage: $USAGE" >&2
+		exit 2
+		;;
+	esac
+	shift
+done
+
+if [ "$keyfile" = "" ]
+then
+	echo "$PROGNAME: you must specify a key file with the -f option" >&2
+	echo "Usage: $USAGE" >&2
+	exit 2
+fi
+if [ -e "$keyfile" ]
+then
+	echo "$PROGNAME: $keyfile: already exists" >&2
+	exit 1
+fi
+
+umask 077
+openssl rand 64 > "$keyfile"
+echo "$keyfile created"
+exit 0

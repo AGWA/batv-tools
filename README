@@ -1,0 +1,112 @@
+ABOUT BATV-TOOLS
+
+batv-tools implements Bounce Address Tag Validation, a system
+for filtering backscatter.  Briefly, BATV works as follows:
+
+  1. The envelope sender of all outgoing mail is rewritten ("signed")
+     to contain a cryptographic token.  If the message bounces,
+     it is bounced to this address.
+
+  2. The envelope recipient of all incoming bounces is checked
+     for a valid token.  If a bounce has a missing
+     or invalid token, it's obviously not in reply to a real
+     message and can be filtered.
+
+BATV is described by an Internet Draft which was last revised in
+2008.  batv-tools implements the draft standard, but also supports
+an alternative address meta-syntax based on sub-addressing, described
+below.
+
+batv-tools provides both a milter (batv-milter) and a collection
+of standalone tools (batv-sign, batv-validate, batv-sendmail) that
+do signing and validation.  The standalone tools enable individual
+users to use BATV without the involvement of their system administrators.
+
+batv-tools was written by Andrew Ayer <agwa at andrewayer dot name>.
+For more information, see <http://www.agwa.name/projects/batv-tools>.
+
+
+HOW BATV-TOOLS WORKS
+
+Outgoing mail is passed through either batv-milter or batv-sign.  If a BATV key
+exists for the envelope sender, the envelope sender is rewritten to be a signed
+BATV address.
+
+Incoming mail is passed through either batv-milter or batv-validate.  If it's
+addressed to a BATV address, the address is validated, and if the validation
+is successful, the address is rewritten to the original non-BATV address.
+The result of the validation ('valid' or 'invalid') is placed in the X-Batv-Status
+header.
+
+batv-tools does not itself discard or reject any mail.  It's up to the user to filter
+any bounce (typically identified by a null envelope sender) which lacks a
+'X-Batv-Status: valid' header.  See doc/filtering.txt for documentation and examples.
+
+
+BUILDING BATV-TOOLS
+
+Run 'make'.  To build only the standalone tools (and not the milter),
+run 'make all-tools'.
+
+
+DEPENDENCIES
+
+To use the standalone tools you need:
+
+  * OpenSSL
+
+To use the milter, you need:
+
+  * OpenSSL
+  * libmilter
+  * A milter-compatible MTA, such as Postfix or Sendmail
+
+To build you need a C++ compiler (such as gcc) and development
+headers for OpenSSL and libmilter.
+
+
+CURRENT STATUS
+
+The current version of batv-tools is 0.4, released on 2013-05-28.
+batv-tools aims to be bug-free and reliable, meaning it shouldn't crash,
+malfunction, or do horrible things to your mail.  However, it has not
+yet reached maturity, meaning it is not as documented, featureful, or
+easy-to-use as it should be.  Additionally, we may make
+backwards-incompatible changes before batv-tools reaches version 1.0.
+
+Testing is currently focused on discovering gotchas with batv-tools'
+design and identifying ways to reduce friction when using batv-tools.
+
+
+SUB-ADDRESS META-SYNTAX
+
+batv-tools supports an alternative address meta-syntax based on
+sub-addressing (aka "plus" addressing).  Instead of rewriting the entire
+local part of the email address, the BATV token is appended to the local
+part after a sub-address delimiter (typically '+' or '-').  For example:
+
+	andrew+prvs=9352e50792@example.com
+
+Since many mail systems support sub-addressing, this syntax permits
+BATV-signed mail to be routed through mail servers that have no knowledge
+of BATV.  This has a couple advantages:
+
+  1. Backup MX servers which accept mail only for known recipients
+     need not support BATV.  As long as they support sub-addressing,
+     mail destined to BATV addresses will be accepted.  (In contrast,
+     the standard meta-syntax appears to the backup MX server as an
+     unknown recipient, meaning the backup MX server must either accept
+     all mail regardless of recipient (a bad idea), or support BATV
+     (not always feasible).)
+
+  2. It lets individual users use BATV with support from their MUA and/or
+     MDA, without the MTA needing to support BATV.
+
+The standalone BATV tools support only the non-standard sub-address syntax
+(otherwise MTA support would be required).  The milter uses the standard
+syntax by default but may be configured to use sub-address syntax.
+
+
+FURTHER DOCUMENTATION AND EXAMPLES
+
+See files the 'doc' sub-directory.

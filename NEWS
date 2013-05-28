@@ -1,0 +1,14 @@
+v0.4 (2013-05-28)
+  * Fix a build bug due to missing #includes.
+
+v0.3 (2013-04-27)
+  * Add batv-keygen script for generating BATV key.
+  * Prevent a spurious warning from libmilter.
+  * Add initial documentation.
+
+v0.2 (2013-03-13)
+  * Fix bug in batv-sendmail.
+  * batv-milter: set X-Batv-Delivered-To header.
+
+v0.1 (2013-02-27)
+  * Initial release.

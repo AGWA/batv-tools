@@ -49,6 +49,8 @@
 #include <set>
 #include <string>
 #include <string.h>
+#include <sys/types.h>
+#include <sys/stat.h>
 
 using namespace batv;
 

@@ -1,0 +1,28 @@
+batv-milter is a complete solution intended for system administrators
+who want to provide BATV to an entire domain of users.  It integrates
+with the MTA to sign all outgoing mail and validate the BATV addresses
+of incoming mail.  It has been developed and tested with Postfix, but
+should work in other milter-supporting MTAs like Sendmail.
+
+For documentation on getting up-and-running with the milter, see
+quickstart.milter.txt.
+
+Note that the milter does NOT reject any incoming mail or attempt
+to determine what's a bounce and what isn't; it merely validates and
+rewrites BATV addresses.  The result of the validation ('valid' or
+'invalid') is placed in the X-Batv-Status header.  See filtering.txt
+for tips and examples for filtering backscatter based on this header.
+
+
+POSTFIX NOTES
+
+By default, Postfix does not apply milters to bounces it generates
+internally.  Consequentially, locally-generated bounces will not be tagged
+with a X-Batv-Status header.  To change this behavior, you can set the
+following Postfix option:
+
+	internal_mail_filter_classes = bounce
+
+Warning: the Postfix documentation says of this option: "It's generally
+not safe to enable content inspection of Postfix-generated email
+messages. The user is warned."

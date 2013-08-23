@@ -1,3 +1,6 @@
+Upcoming release
+  * Improve documentation.
+
 v0.4 (2013-05-28)
   * Fix a build bug due to missing #includes.
 

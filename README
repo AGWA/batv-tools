@@ -58,8 +58,9 @@ To use the standalone tools you need:
 To use the milter, you need:
 
   * OpenSSL
-  * libmilter
-  * A milter-compatible MTA, such as Postfix or Sendmail
+  * libmilter, from Sendmail 8.14.0 or higher
+  * Postfix 2.6 or higher, Sendmail 8.14.0 or higher, or a MTA with equivalent
+    milter functionality
 
 To build you need a C++ compiler (such as gcc) and development
 headers for OpenSSL and libmilter.
@@ -80,10 +81,11 @@ design and identifying ways to reduce friction when using batv-tools.
 
 SUB-ADDRESS META-SYNTAX
 
-batv-tools supports an alternative address meta-syntax based on
-sub-addressing (aka "plus" addressing).  Instead of rewriting the entire
-local part of the email address, the BATV token is appended to the local
-part after a sub-address delimiter (typically '+' or '-').  For example:
+batv-tools supports an alternative (and highly-recommended) address
+meta-syntax based on sub-addressing (aka "plus" addressing).  Instead of
+rewriting the entire local part of the email address, the BATV token is
+appended to the local part after a sub-address delimiter (typically '+'
+or '-').  For example:
 
 	andrew+prvs=9352e50792@example.com
 
@@ -105,6 +107,10 @@ of BATV.  This has a couple advantages:
 The standalone BATV tools support only the non-standard sub-address syntax
 (otherwise MTA support would be required).  The milter uses the standard
 syntax by default but may be configured to use sub-address syntax.
+It is highly recommended that you use the sub-address syntax; batv-tools
+is most extensively tested with the sub-address syntax, and using the
+standard syntax may require additional configuration from your MTA that
+isn't documented here.
 
 
 FURTHER DOCUMENTATION AND EXAMPLES

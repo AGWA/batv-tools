@@ -220,6 +220,10 @@ namespace {
 				if (batv_ctx->batv_rcpt.tag_type == "prvs") {
 					if (prvs_validate(batv_ctx->batv_rcpt, config->address_lifetime, *batv_ctx->batv_rcpt_key)) {
 						status = "valid";
+					} else {
+						if (config->reject_unless_verified) {
+							return milter_status(Config::FAILURE_REJECT);
+						}
 					}
 				}
 

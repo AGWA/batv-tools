@@ -62,6 +62,7 @@ namespace batv {
 		unsigned int		address_lifetime;	// in days, how long BATV address is valid
 		char			sub_address_delimiter;	// e.g. "+"
 		Failure_mode		on_internal_error;	// what to do when an internal error happens
+		bool			reject_unless_verified;
 
 		const Key*		get_key (const std::string& sender_address) const;	// Get HMAC key for the given sender
 												// (NULL if sender doesn't use BATV)
@@ -82,6 +83,7 @@ namespace batv {
 			address_lifetime = 7;
 			sub_address_delimiter = 0;
 			on_internal_error = FAILURE_TEMPFAIL;
+			reject_unless_verified = false;
 		}
 
 	};

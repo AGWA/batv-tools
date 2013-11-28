@@ -202,6 +202,14 @@ void	Config::set (const std::string& directive, const std::string& value)
 		} else {
 			throw Config_error("Invalid value for 'on-internal-error' directive (should be 'tempfail', 'accept', or 'reject'): " + value);
 		}
+	} else if (directive == "reject-unless-verified") {
+		if (value == "yes" || value == "true" || value == "on" || value == "1") {
+			reject_unless_verified = true;
+		} else if (value == "no" || value == "false" || value == "off" || value == "0") {
+			reject_unless_verified = false;
+		} else {
+			throw Config_error("Invalid value for 'reject-unless-verified' directive (should be 'true' or 'false')");
+		}
 	} else {
 		throw Config_error("Invalid config directive " + directive);
 	}

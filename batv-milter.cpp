@@ -29,7 +29,7 @@
  */
 
 #include "prvs.hpp"
-#include "config.hpp"
+#include "config-milter.hpp"
 #include "address.hpp"
 #include "key.hpp"
 #include "common.hpp"

@@ -32,6 +32,7 @@
 #include "key.hpp"
 #include "common.hpp"
 #include "address.hpp"
+#include "config.hpp"
 #include <iostream>
 #include <fstream>
 #include <unistd.h>
@@ -65,23 +66,13 @@ namespace {
 		std::clog << "                       (default: Delivered-To)" << std::endl;
 	}
 
-	struct Validate_config {
-		Key_map			keys;			// map from sender address/domain to their HMAC key
-		Key			default_key;		// key to use if address/domain not in key map
-		unsigned int		address_lifetime;	// in days, how long BATV address is valid
-		char			sub_address_delimiter;	// e.g. "+"
+	struct Validate_config : Common_config {
 		std::string		rcpt_header;		// e.g. "Delivered-To"
 
 		Validate_config ()
 		{
-			address_lifetime = 7;
 			sub_address_delimiter = '+';
 			rcpt_header = "Delivered-To";
-		}
-
-		const Key*		get_key (const std::string& sender_address) const
-		{
-			return batv::get_key(keys, sender_address, !default_key.empty() ? &default_key : NULL);
 		}
 	};
 

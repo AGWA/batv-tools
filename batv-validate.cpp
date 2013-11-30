@@ -33,6 +33,7 @@
 #include "common.hpp"
 #include "address.hpp"
 #include "config.hpp"
+#include "verify.hpp"
 #include <iostream>
 #include <fstream>
 #include <unistd.h>
@@ -146,8 +147,8 @@ namespace {
 
 	void filter (const Validate_config& config, std::istream& in, std::ostream& out)
 	{
-		bool	done = false;	// becomes true when we've processed the envelope recipient
-		bool	first = true;	// becomes false after the first line of input
+		Verify_result	result = VERIFY_NONE;
+		bool		first = true;	// becomes false after the first line of input
 		while (in.peek() != -1 && in.peek() != '\n') {
 			// Read first line of header
 			std::string		first_line;
@@ -169,36 +170,27 @@ namespace {
 			if (strcasecmp(name.c_str(), "X-Batv-Status") == 0) {
 				// Remove this header to prevent malicious senders from faking us out
 
-			} else if (!done && strcasecmp(name.c_str(), config.rcpt_header.c_str()) == 0) {
+			} else if (result != VERIFY_SUCCESS && strcasecmp(name.c_str(), config.rcpt_header.c_str()) == 0) {
 				Email_address		rcpt_to;
 				rcpt_to.parse(canon_address(after_ws(value.c_str())).c_str());
 
-				// Make sure that the BATV address is syntactically valid AND it's using a known tag type:
-				Batv_address		batv_rcpt;
-				if (batv_rcpt.parse(rcpt_to, config.sub_address_delimiter) && batv_rcpt.tag_type == "prvs") {
-					// Get the key for this sender:
-					const Key*	batv_rcpt_key = config.get_key(batv_rcpt.orig_mailfrom.make_string());
-					if (batv_rcpt_key != NULL) {
-						// A non-NULL key means this is a BATV sender.
+				std::string		true_rcpt;
+				Verify_result		this_result = verify(rcpt_to, &true_rcpt, config);
 
-						// Restore original envelope recipient
-						out << name << ": " << batv_rcpt.orig_mailfrom.make_string() << '\n';
-
-						// But also leave the original BATV envelope recipient in a different header
-						out << "X-Batv-Delivered-To:" << value << '\n';
-
-						// Validate the address and put the status in the X-Batv-Status header
-						if (prvs_validate(batv_rcpt, config.address_lifetime, *batv_rcpt_key)) {
-							out << "X-Batv-Status: valid\n";
-						} else {
-							out << "X-Batv-Status: invalid\n";
-						}
-
-						// Set a flag so we don't do this again.
-						done = true;
-					}
+				if (this_result != VERIFY_NONE) {
+					result = this_result;
 				}
-				if (!done) {
+
+				if (this_result == VERIFY_SUCCESS) {
+					// Restore original envelope recipient
+					out << name << ": " << true_rcpt << '\n';
+
+					out << "X-Batv-Status: valid\n";
+
+					// Leave the original BATV envelope recipient in a different header
+					out << "X-Batv-Delivered-To:" << value << '\n';
+
+				} else {
 					// Copy through the header unmodified
 					out << name << ':' << value << '\n';
 				}
@@ -208,8 +200,13 @@ namespace {
 				out << name << ':' << value << '\n';
 			}
 
-
 			first = false;
+		}
+
+		if (result == VERIFY_MISSING) {
+			out << "X-Batv-Status: invalid, missing\n";
+		} else if (result == VERIFY_BAD_SIGNATURE) {
+			out << "X-Batv-Status: invalid, bad-signature\n";
 		}
 
 		// Copy through the message body
@@ -323,39 +320,27 @@ try {
 		// Buffer errors in an ostringstream and only write it to stderr if all the addresses
 		// fail to validate.  The exit code will reflect the status of the last address.
 		std::ostringstream	errors;
-		int			status = 1;
+		int			status = 0;
 		for (size_t i = 0; i < rcpt_tos.size(); ++i) {
-			Batv_address		batv_rcpt;
-			if (!batv_rcpt.parse(rcpt_tos[i], config.sub_address_delimiter) || batv_rcpt.tag_type != "prvs") {
-				// Not a BATV address
-				errors << argv[0] << ": " << rcpt_tos[i].make_string() << ": Not a BATV address" << std::endl;
+			std::string	true_rcpt;
+			Verify_result	result = verify(rcpt_tos[i], &true_rcpt, config);
+			if (result == VERIFY_NONE) {
+				errors << argv[0] << ": " << true_rcpt << ": No key available for this sender" << std::endl;
+				continue;
+			} else if (result == VERIFY_MISSING) {
+				errors << argv[0] << ": " << rcpt_tos[i].make_string() << ": Missing BATV signature" << std::endl;
 				status = 11;
 				continue;
-			}
-
-			// Get the key for this sender:
-			const Key*	batv_rcpt_key = config.get_key(batv_rcpt.orig_mailfrom.make_string());
-			if (batv_rcpt_key == NULL) {
-				// No key for this sender
-				errors << argv[0] << ": " << batv_rcpt.orig_mailfrom.make_string() << ": No key available for this sender" << std::endl;
-				status = 12;
-				continue;
-			}
-
-			// Validate the address
-			if (!prvs_validate(batv_rcpt, config.address_lifetime, *batv_rcpt_key)) {
-				// Invalid signature
+			} else if (result == VERIFY_BAD_SIGNATURE) {
 				errors << argv[0] << ": " << rcpt_tos[i].make_string() << ": Invalid signature" << std::endl;
 				status = 10;
 				continue;
+			} else if (result == VERIFY_SUCCESS) {
+				// Output original envelope recipient
+				std::cout << true_rcpt << std::endl;
+				status = 0;
+				break;
 			}
-
-			// Valid signature
-
-			// Output original envelope recipient
-			std::cout << batv_rcpt.orig_mailfrom.make_string() << std::endl;
-			status = 0;
-			break;
 		}
 
 		if (status != 0) {

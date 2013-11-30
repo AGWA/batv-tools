@@ -31,6 +31,7 @@
 #include "prvs.hpp"
 #include "config-milter.hpp"
 #include "address.hpp"
+#include "verify.hpp"
 #include "key.hpp"
 #include "common.hpp"
 #include "openssl-threads.hpp"
@@ -63,26 +64,23 @@ namespace {
 
 		// Message state (applicable only to the current message):
 		unsigned int		num_batv_status_headers;// number of existing X-Batv-Status headers in the message
-		Email_address		env_from; 		// the message's envelope sender
-		bool			is_batv_rcpt;		// is the message destined to a BATV address?
-		Batv_address		batv_rcpt;		// the message recipient, valid iff is_batv_rcpt==true
-		std::string		batv_rcpt_string;	// original message recipient string, iff is_batv_rcpt==true
-		const Key*		batv_rcpt_key;		// the key to be used to sign the address, iff is_batv_rcpt==true
-
+		std::string		env_from;		// the message's envelope sender
+		std::string		env_rcpt;		// the message's (last) envelope recipient
+		unsigned int		num_recipients;		// number of envelope recipients in the message
 
 		Batv_context ()
 		{
 			client_is_internal = false;
 			num_batv_status_headers = 0;
-			is_batv_rcpt = false;
-			batv_rcpt_key = NULL;
+			num_recipients = 0;
 		}
 
 		void clear_message_state ()
 		{
 			num_batv_status_headers = 0;
 			env_from.clear();
-			is_batv_rcpt = false;
+			env_rcpt.clear();
+			num_recipients = 0;
 		}
 	};
 
@@ -137,7 +135,7 @@ namespace {
 		}
 
 		// Make note of the envelope sender
-		batv_ctx->env_from.parse(canon_address(args[0]).c_str());
+		batv_ctx->env_from = args[0];
 
 		return SMFIS_CONTINUE;
 	}
@@ -152,23 +150,9 @@ namespace {
 			return milter_status(config->on_internal_error);
 		}
 
-		// Check to see if this message is destined to a BATV address
-		// (if we haven't already determined that it is)
-		if (!batv_ctx->is_batv_rcpt) {
-			Email_address		rcpt_to;
-			rcpt_to.parse(canon_address(args[0]).c_str());
-			// Make sure that the BATV address is syntactically valid AND it's using a known tag type:
-			if (batv_ctx->batv_rcpt.parse(rcpt_to, config->sub_address_delimiter) &&
-					batv_ctx->batv_rcpt.tag_type == "prvs") {
-				// Get the key for this sender:
-				batv_ctx->batv_rcpt_key = config->get_key(batv_ctx->batv_rcpt.orig_mailfrom.make_string());
-				if (batv_ctx->batv_rcpt_key != NULL) {
-					// A non-NULL key means this is a BATV sender.
-					batv_ctx->is_batv_rcpt = true;
-					batv_ctx->batv_rcpt_string = args[0];
-				}
-			}
-		}
+		// Make note of the envelope recipient
+		batv_ctx->env_rcpt = args[0];
+		++batv_ctx->num_recipients;
 
 		return SMFIS_CONTINUE;
 	}
@@ -189,6 +173,25 @@ namespace {
 		}
 
 		return SMFIS_CONTINUE;
+	}
+
+	Verify_result verify (Batv_context* batv_ctx, std::string* true_rcpt)
+	{
+		if (batv_ctx->num_recipients != 1) {
+			true_rcpt->clear();
+			// This can't be a valid bounce because it has more than one recipient.
+			// Section 4.5.5 of RFC5321 states that messages with a null reverse-path
+			// "are notifications about a previous message, and they are sent to the
+			// reverse-path of the previous mail message."  A message has exactly
+			// one reverse-path (section 3.3), ergo messages with a null reverse-path
+			// must have exactly one recipient.
+			return VERIFY_MULTIPLE_RCPT;
+		}
+
+		Email_address		env_rcpt;
+		env_rcpt.parse(canon_address(batv_ctx->env_rcpt.c_str()).c_str());
+
+		return batv::verify(env_rcpt, true_rcpt, *config);
 	}
 
 	sfsistat on_eom (SMFICTX* ctx)
@@ -212,37 +215,49 @@ namespace {
 				}
 			}
 
-			if (batv_ctx->is_batv_rcpt) {
-				// Message has a BATV recipient -> validate the BATV signature
-				// Set the X-Batv-Status header to "valid" or "invalid"
-				const char* status = "invalid";
+			const bool		is_bounce = canon_address(batv_ctx->env_from.c_str()).empty(); // bounces have null envelope senders (TODO: there should be configurable bounce detection logic)
 
-				if (batv_ctx->batv_rcpt.tag_type == "prvs") {
-					if (prvs_validate(batv_ctx->batv_rcpt, config->address_lifetime, *batv_ctx->batv_rcpt_key)) {
-						status = "valid";
-					}
-				}
+			std::string		true_rcpt;
+			Verify_result		result = verify(batv_ctx, &true_rcpt);
+			const char*		batv_status = NULL;
 
-				if (smfi_addheader(ctx, const_cast<char*>("X-Batv-Status"), const_cast<char*>(status)) == MI_FAILURE) {
+			if (result == VERIFY_SUCCESS) {
+				batv_status = "valid";
+			} else if (result == VERIFY_MISSING && is_bounce) {
+				batv_status = "invalid, missing";
+			} else if (result == VERIFY_BAD_SIGNATURE && is_bounce) {
+				batv_status = "invalid, bad-signature";
+			} else if (result == VERIFY_MULTIPLE_RCPT && is_bounce) {
+				batv_status = "invalid, multiple-rcpt";
+			} else if (result == VERIFY_ERROR) {
+				batv_ctx->clear_message_state();
+				return milter_status(config->on_internal_error);
+			}
+
+			if (batv_status) {
+				// Add the X-Batv-Status header
+				if (smfi_addheader(ctx, const_cast<char*>("X-Batv-Status"), const_cast<char*>(batv_status)) == MI_FAILURE) {
 					std::clog << "on_eom: smfi_addheader failed (1)" << std::endl;
 					batv_ctx->clear_message_state();
 					return milter_status(config->on_internal_error);
 				}
+			}
 
+			if (result == VERIFY_SUCCESS) {
 				// Add a X-Batv-Delivered-To header containing the envelope recipient, pre-rewrite
-				if (smfi_addheader(ctx, const_cast<char*>("X-Batv-Delivered-To"), const_cast<char*>(batv_ctx->batv_rcpt_string.c_str())) == MI_FAILURE) {
+				if (smfi_addheader(ctx, const_cast<char*>("X-Batv-Delivered-To"), const_cast<char*>(batv_ctx->env_rcpt.c_str())) == MI_FAILURE) {
 					std::clog << "on_eom: smfi_addheader failed (2)" << std::endl;
 					batv_ctx->clear_message_state();
 					return milter_status(config->on_internal_error);
 				}
 
 				// Restore the recipient to the original value
-				if (smfi_delrcpt(ctx, const_cast<char*>(batv_ctx->batv_rcpt_string.c_str())) == MI_FAILURE) {
+				if (smfi_delrcpt(ctx, const_cast<char*>(batv_ctx->env_rcpt.c_str())) == MI_FAILURE) {
 					std::clog << "on_eom: smfi_delrcpt failed" << std::endl;
 					batv_ctx->clear_message_state();
 					return milter_status(config->on_internal_error);
 				}
-				if (smfi_addrcpt(ctx, const_cast<char*>(batv_ctx->batv_rcpt.orig_mailfrom.make_string().c_str())) == MI_FAILURE) {
+				if (smfi_addrcpt(ctx, const_cast<char*>(true_rcpt.c_str())) == MI_FAILURE) {
 					std::clog << "on_eom: smfi_addrcpt failed" << std::endl;
 					batv_ctx->clear_message_state();
 					return milter_status(config->on_internal_error);
@@ -250,14 +265,15 @@ namespace {
 			}
 		}
 
-		if (config->do_sign) {
+		if (config->do_sign && batv_ctx->client_is_internal) {
 			const Key*	sender_key = NULL;
-			if (batv_ctx->client_is_internal &&
-					!is_batv_address(batv_ctx->env_from, config->sub_address_delimiter) &&
-					(sender_key = config->get_key(batv_ctx->env_from.make_string())) != NULL) {
+			Email_address	env_from;
+			env_from.parse(canon_address(batv_ctx->env_from.c_str()).c_str());
+			if (!is_batv_address(env_from, config->sub_address_delimiter) &&
+					(sender_key = config->get_key(env_from.make_string())) != NULL) {
 				// Message from internal sender who uses BATV -> rewrite the envelope sender to a BATV address.
 				// (We only do this if the envelope sender isn't already a BATV address)
-				Batv_address new_sender(prvs_generate(batv_ctx->env_from, config->address_lifetime, *sender_key));
+				Batv_address new_sender(prvs_generate(env_from, config->address_lifetime, *sender_key));
 
 				if (smfi_chgfrom(ctx, const_cast<char*>(new_sender.make_string(config->sub_address_delimiter).c_str()), NULL) == MI_FAILURE) {
 					std::clog << "on_eom: smfi_chgfrom failed" << std::endl;

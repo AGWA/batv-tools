@@ -8,7 +8,7 @@ MILTER_PROGRAMS = batv-milter
 TOOLS_PROGRAMS = batv-validate batv-sign
 PROGRAMS = $(TOOLS_PROGRAMS) $(MILTER_PROGRAMS)
 
-COMMON_OBJFILES = address.o common.o config.o key.o prvs.o
+COMMON_OBJFILES = address.o common.o config.o key.o prvs.o verify.o
 MILTER_OBJFILES = config-milter.o openssl-threads.o
 
 all: all-tools all-milter

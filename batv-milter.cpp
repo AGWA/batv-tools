@@ -220,18 +220,26 @@ namespace {
 			std::string		true_rcpt;
 			Verify_result		result = verify(batv_ctx, &true_rcpt);
 			const char*		batv_status = NULL;
+			sfsistat		our_milter_status = SMFIS_ACCEPT;
 
 			if (result == VERIFY_SUCCESS) {
 				batv_status = "valid";
 			} else if (result == VERIFY_MISSING && is_bounce) {
 				batv_status = "invalid, missing";
+				our_milter_status = milter_status(config->on_invalid);
 			} else if (result == VERIFY_BAD_SIGNATURE && is_bounce) {
 				batv_status = "invalid, bad-signature";
+				our_milter_status = milter_status(config->on_invalid);
 			} else if (result == VERIFY_MULTIPLE_RCPT && is_bounce) {
 				batv_status = "invalid, multiple-rcpt";
+				our_milter_status = milter_status(config->on_invalid);
 			} else if (result == VERIFY_ERROR) {
+				our_milter_status = milter_status(config->on_internal_error);
+			}
+
+			if (our_milter_status != SMFIS_ACCEPT) {
 				batv_ctx->clear_message_state();
-				return milter_status(config->on_internal_error);
+				return our_milter_status;
 			}
 
 			if (batv_status) {

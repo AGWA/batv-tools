@@ -187,6 +187,16 @@ void	Config::set (const std::string& directive, const std::string& value)
 			throw Config_error("Unable to open key map " + value);
 		}
 		load_key_map(keys, key_map_in);
+	} else if (directive == "on-invalid") {
+		if (value == "tempfail") {
+			on_invalid = FAILURE_TEMPFAIL;
+		} else if (value == "accept") {
+			on_invalid = FAILURE_ACCEPT;
+		} else if (value == "reject") {
+			on_invalid = FAILURE_REJECT;
+		} else {
+			throw Config_error("Invalid value for 'on-invalid' directive (should be 'tempfail', 'accept', or 'reject'): " + value);
+		}
 	} else if (directive == "on-internal-error") {
 		if (value == "tempfail") {
 			on_internal_error = FAILURE_TEMPFAIL;

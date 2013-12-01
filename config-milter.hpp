@@ -59,6 +59,7 @@ namespace batv {
 		bool			do_sign;
 		bool			do_verify;
 		std::vector<Ipv6_cidr>	internal_hosts;		// we generate BATV addresses only for mail from these hosts
+		Failure_mode		on_invalid;		// what to do about an invalid/missing BATV signature
 		Failure_mode		on_internal_error;	// what to do when an internal error happens
 
 		bool			is_internal_host (const struct in6_addr&) const;	// Is given IPv6 address internal?
@@ -75,6 +76,7 @@ namespace batv {
 			socket_mode = -1;
 			do_sign = true;
 			do_verify = true;
+			on_invalid = FAILURE_ACCEPT;
 			on_internal_error = FAILURE_TEMPFAIL;
 		}
 

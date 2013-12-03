@@ -66,13 +66,13 @@ namespace {
 		unsigned int		num_batv_status_headers;// number of existing X-Batv-Status headers in the message
 		std::string		env_from;		// the message's envelope sender
 		std::string		env_rcpt;		// the message's (last) envelope recipient
-		unsigned int		num_recipients;		// number of envelope recipients in the message
+		bool			multiple_recipients;	// true iff message has >1 envelope recipients
 
 		Batv_context ()
 		{
 			client_is_internal = false;
 			num_batv_status_headers = 0;
-			num_recipients = 0;
+			multiple_recipients = false;
 		}
 
 		void clear_message_state ()
@@ -80,7 +80,7 @@ namespace {
 			num_batv_status_headers = 0;
 			env_from.clear();
 			env_rcpt.clear();
-			num_recipients = 0;
+			multiple_recipients = false;
 		}
 	};
 
@@ -151,8 +151,8 @@ namespace {
 		}
 
 		// Make note of the envelope recipient
+		batv_ctx->multiple_recipients = !batv_ctx->env_rcpt.empty();
 		batv_ctx->env_rcpt = args[0];
-		++batv_ctx->num_recipients;
 
 		return SMFIS_CONTINUE;
 	}
@@ -170,6 +170,11 @@ namespace {
 		// Count the number of existing X-Batv-Status headers so we can remove them later.
 		if (strcasecmp(name, "X-Batv-Status") == 0) {
 			++batv_ctx->num_batv_status_headers;
+			if (batv_ctx->num_batv_status_headers == 0) {
+				// integer overflow; rather unlikely since a message with 4 billion X-Batv-Status headers would be enormous
+				std::clog << "on_header: rejecting incoming message because it has too many existing X-Batv-Status headers, which is likely malicious" << std::endl;
+				return SMFIS_REJECT;
+			}
 		}
 
 		return SMFIS_CONTINUE;
@@ -177,7 +182,7 @@ namespace {
 
 	Verify_result verify (Batv_context* batv_ctx, std::string* true_rcpt)
 	{
-		if (batv_ctx->num_recipients != 1) {
+		if (batv_ctx->multiple_recipients) {
 			true_rcpt->clear();
 			// This can't be a valid bounce because it has more than one recipient.
 			// Section 4.5.5 of RFC5321 states that messages with a null reverse-path

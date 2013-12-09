@@ -1,0 +1,33 @@
+CHANGES TO BE AWARE OF FOR batv-tools 0.5
+
+The X-Batv-Status header has been enhanced to include the reason for invalidity:
+
+	X-Batv-Status: valid
+	X-Batv-Status: invalid; missing
+	X-Batv-Status: invalid; bad-signature
+	X-Batv-Status: invalid; multiple-rcpt
+
+In the future we may add additional information to these headers. Please
+ensure your scripts consider any X-Batv-Status header STARTING WITH
+"valid" as valid, and any X-Batv-Status header STARTING WITH "invalid"
+as invalid.  DO NOT match the entire value.
+
+batv-milter now adds 'X-Batv-Status: invalid; bad-signature' to any bounce
+(i.e. message with null envelope sender) which isn't addressed to a BATV
+address (previously it added no X-Batv-Status header to such messages).
+Because of this change, it is now recommended that your filters discard
+any message WITH a 'X-Batv-Status: invalid' header, rather than discarding
+any bounce WITHOUT a 'X-Batv-Status: valid' header as previously
+recommended by the documentation.  It is highly recommended that you
+consult doc/filtering.txt, which has been substantially rewritten.
+
+batv-milter has a new option 'on_invalid'.  Set it to 'reject' for
+batv-milter to reject backscatter at SMTP time.
+
+batv-tools now has mailing lists:
+
+	Announce list:  http://lists.cloudmutt.com/mailman/listinfo/batv-tools-announce
+	Discuss list:   http://lists.cloudmutt.com/mailman/listinfo/batv-tools-discuss
+
+If you use batv-tools please consider subscribing to one or both of these
+lists to stay abreast of (and provide input to) batv-tools development.

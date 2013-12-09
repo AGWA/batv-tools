@@ -1,57 +1,120 @@
-batv-tools does not itself identify bounces or discard or reject any mail.
-It is up to the user to identify bounces and filter those which lack a
-'X-Batv-Status: valid' header.
+batv-milter and 'batv-validate -f' place one of the following values
+in the X-Batv-Status header to describe the result of the validation:
 
-batv-tools is designed this way to give the user maximum flexibility,
-since some users may prefer to quarantine backscatter, while others may
-prefer to discard it.  batv-tools avoids hard-coding bounce detection
-logic, since some users may wish to use BATV to filter bounce-like
-messages that don't have a null envelope sender, such as some vacation
-auto-replies.  Letting the user control this detection logic (for example,
-with procmail) is more reasonable than including detection logic for
-every possible bounce-like message in batv-tools.
+  * valid
+        This message is addressed to a BATV address with a valid signature.
+	It can be considered a legitimate bounce.
+  * invalid; missing
+        This message claims to be a bounce, but is not addressed to a BATV
+        address.  It should be considered backscatter and be discarded.
+  * invalid; bad-signature
+        This message claims to be a bounce, but is addressed to a BATV
+        address with an incorrect signature. It should be considered
+        backscatter and be discarded.
+  * invalid; multiple-rcpt
+        This message claims to be a bounce, but is addressed to multiple
+        recipients in violation of the SMTP standard.  It should be
+        considered backscatter and be discarded.
 
-In general, you want to filter any message which has a 'Return-Path: <>'
-header that *doesn't* have a 'X-Batv-Status: valid' header.  Note that
-matching 'X-Batv-Status: invalid' is insufficient, since a bounce which
-wasn't addressed to a BATV address at all won't have a X-Batv-Status
-header.
+(Future versions of batv-tools may include additional information in the
+X-Batv-Status header, so you should assume any header value starting with
+"valid" means valid, and any header value starting with "invalid" means
+invalid.)
 
-Make sure you apply your filtering *after* batv-milter/batv-validate
-has run, so you're sure the X-Batv-Status header has been added.
+batv-milter and 'batv-validate -f' always add a 'X-Batv-Status: valid'
+header if the envelope is addressed to a valid BATV address.  However,
+batv-milter only adds a 'X-Batv-Status: invalid' header if the message
+claims to be a bounce (has a null envelope sender).  Non-bounces
+not addressed to BATV addresses are given no X-Batv-Status header.
+Since non-bounces need not be addressed to valid BATV addresses,
+the X-Batv-Status header does not make sense for them.
+
+'batv-validate -f', on the other hand, assumes any input is a bounce
+and will add a 'X-Batv-Status: invalid' header if the envelope is not
+addressed to a valid BATV address.  Be sure you only filter bounces,
+and never normal mail, through 'batv-validate -f'.
+
+Mail user agents, mail delivery agents (e.g. procmail), and spam filters
+(e.g. SpamAssassin) can be configured to filter out mail containing a
+'X-Batv-Status: invalid' header, as shown below.  In general, unless you
+know what you are doing, you should filter out messages that HAVE a
+'X-Batv-Status: invalid' header, rather than filtering out messages that
+DON'T have a 'X-Batv-Status: valid' header.  This is the safest way
+to ensure you don't accidentally lose legitimate mail.
 
 
 FILTERING USING PROCMAIL
 
-The following procmail recipe can be used to filter bounces that have
-been identified as backscatter by batv-tools:
+The following procmail recipe can be used to discard invalid bounces:
 
 	:0:
-	* ^Return-Path: <>
-	* !^X-Batv-Status: valid
+	* ^X-Batv-Status: invalid
 	/dev/null
 
-You may of course choose to quarantine backscatter in a mailbox instead
+You can of course choose to quarantine backscatter in a mailbox instead
 of sending it to /dev/null.
 
 
 FILTERING USING SPAMASSASSIN
 
-The following SpamAssassin rules can be used to filter bounces that
-have been identified as backscatter by batv-tools.  These rules assign a
-score of 10 to backscatter. You can adjust this number to suit your fancy.
+The following SpamAssassin rules can be used to detect invalid bounces.
+These rules assign a score of 10 to backscatter. You can adjust this
+number to suit your fancy.
 
-header BATV_VALID               X-Batv-Status =~ /^valid$/
-score BATV_VALID                -0.001
-describe BATV_VALID             Message has a valid BATV signature
-
-header __BOUNCE                 Return-Path:addr =~ /^$/
-meta BACKSCATTER                __BOUNCE && !BATV_VALID
+header BACKSCATTER              X-Batv-Status =~ /^invalid/
 describe BACKSCATTER            Bounce is bogus because it lacks valid BATV sig
 score BACKSCATTER               10
 
-Warning: the BACKSCATTER rule doesn't work when SpamAssassin is run from
-spamass-milter because the Return-Path header does not exist at that
-point.  As a result, the BACKSCATTER rule triggers even for non-bounces.
-Avoid using this rule from spamass-milter.
+If you filter using SpamAssassin, make sure batv-tools runs BEFORE
+SpamAssassin in your mail processing pipeline.
+
+
+REJECTING BACKSCATTER
+
+You can also configure batv-milter to reject backscatter at SMTP
+time instead of tagging it with a 'X-Batv-Status: invalid' header.
+See doc/milter.txt for details.
+
+
+"BOUNCES" WITH NON-NULL ENVELOPE SENDER
+
+As explained above, batv-milter only adds 'X-Batv-Status: invalid'
+headers to messages with a null envelope sender.  Since the SMTP standard
+requires non-delivery reports to have a null envelope sender, this logic
+is sufficient most of the time.  However, bounces can also come from
+software like anti-virus filters, challenge/response systems,
+and vacation auto-responders.  Such software doesn't always use a
+non-null envelope sender.
+
+Matching the 'X-Batv-Status: invalid' header won't catch backscatter from
+these systems, but if you can reliably identify the bounces they produce,
+you can discard messages that do NOT have a 'X-Batv-Status: valid' header.
+
+For example, using Procmail:
+
+	:0:
+	* From: MAILER-DAEMON@
+	* !^X-Batv-Status: valid
+	/dev/null
+
+	:0:
+	* Subject: Out of office auto-reply
+	* !^X-Batv-Status: valid
+	/dev/null
+
+The first recipe requires any mail with a body From: address starting
+with MAILER-DAEMON@ to be addressed to a valid BATV address.  This
+should be safe, since normal mail is unlikely to have such a From:
+address.
+
+The second recipe is more drastic, requiring all messages with a
+Subject: starting with "Out of office auto-reply" to be addressed
+to a valid BATV address.
+
+Be extremely careful to only require 'X-Batv-Status: valid' headers from
+mail that is actually a bounce.  A message whose subject is "Out of office
+auto-reply" is likely to be a bounce from an auto-responder, but someone
+could always send such a message by hand.  Remember, non-bounces aren't
+addressed to BATV addresses and won't get a 'X-Batv-Status: valid' header.
+You don't want to lose legitimate mail.
 

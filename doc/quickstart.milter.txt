@@ -50,6 +50,10 @@ automated/simplified for you.
 		should run as.  It is highly recommended that you run
 		batv-milter as a non-root user.
 
+		on-invalid -- set this to 'accept' or 'reject' to control
+		what the milter does with invalid bounces.  The default
+		is accept.
+
 
 2. CONFIGURE YOUR KEY MAP FILE
 
@@ -88,6 +92,11 @@ automated/simplified for you.
 
 		recipient_delimiter = +
 
+	If you aren't using the sub-address syntax, you'll need to
+	configure your MTA not to treat BATV addresses as unknown local
+	recipients.  This is complicated and beyond the scope of this
+	document, which is why the sub-address syntax is recommended.
+
 	If using Postfix, you may want to set the
 	internal_mail_filter_classes option so that milters are applied
 	to locally-generated bounces; see "Postfix Notes" in milter.txt
@@ -97,9 +106,9 @@ automated/simplified for you.
 4. (RE)START THE DAEMONS
 
 	Start the batv-milter daemon by running:
-	
+
 		batv-milter --config /path/to/config
-	
+
 	Make sure this runs when the system boots.
 
 	Restart your MTA so it starts using the milter.
@@ -107,8 +116,8 @@ automated/simplified for you.
 
 5. FILTER BACKSCATTER
 
-	The milter does NOT reject any incoming mail; it simply validates
-	and rewrites BATV addresses, placing the result of the validation
-	in the X-Batv-Status header.  See filtering.txt for tips and
-	examples for filtering backscatter based on this header.
+	Unless you set 'on_invalid' to 'reject', you'll need to use a
+	program such as procmail or SpamAssassin to filter backscatter
+	based on the X-Batv-Status header.  See filtering.txt for tips
+	and examples.
 

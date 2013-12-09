@@ -55,7 +55,7 @@ looking to configure the BATV milter, see quickstart.milter.txt.
 
 	You should filter all incoming bounces (i.e. those with a null
 	Return-Path) through the 'batv-validate -f' command, and then
-	discard bounces lacking a 'X-Batv-Status: valid' header.
+	discard bounces with a 'X-Batv-Status: invalid' header.
 
 	If you use procmail, you can accomplish this with the following
 	recipe in ~/.procmailrc:
@@ -67,7 +67,7 @@ looking to configure the BATV milter, see quickstart.milter.txt.
 		| batv-validate -f -h Delivered-To
 
 		:0a:
-		* !^X-Batv-Status: valid
+		* ^X-Batv-Status: invalid
 		/dev/null
 	}
 
@@ -76,11 +76,16 @@ looking to configure the BATV milter, see quickstart.milter.txt.
 	used by Postfix.  Consult your MTA's documentation to determine
 	the header name.
 
-	batv-validate adds the header 'X-Batv-Status: valid' if the
-	message has a valid BATV recipient address.  You can match on
+	batv-validate adds the header 'X-Batv-Status: invalid' if the
+	message lacks a valid BATV recipient address.  You can match on
 	this header using a later procmail recipe.  In the example above,
-	procmail sends bounces lacking this header to /dev/null.  You may
+	procmail sends bounces with this header to /dev/null.  You may
 	wish to quarantine such messages in a separate mailbox instead.
+
+	Only filter bounces (i.e. those with a null Return-Path), and
+	never normal mail, through 'batv-validate -f'.  Normal mail is
+	never addressed to a BATV address, and thus would get tagged as
+	backscatter by 'batv-validate -f'.
 
 
 ADVANCED CONFIGURATION

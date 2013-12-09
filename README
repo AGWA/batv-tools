@@ -8,9 +8,8 @@ for filtering backscatter.  Briefly, BATV works as follows:
      it is bounced to this address.
 
   2. The envelope recipient of all incoming bounces is checked
-     for a valid token.  If a bounce has a missing
-     or invalid token, it's obviously not in reply to a real
-     message and can be filtered.
+     for a valid token.  If a bounce has a missing or invalid token,
+     it's obviously not in reply to a real message and can be filtered.
 
 BATV is described by an Internet Draft which was last revised in
 2008.  batv-tools implements the draft standard, but also supports
@@ -23,30 +22,35 @@ do signing and validation.  The standalone tools enable individual
 users to use BATV without the involvement of their system administrators.
 
 batv-tools was written by Andrew Ayer <agwa at andrewayer dot name>.
-For more information, see <http://www.agwa.name/projects/batv-tools>.
+For more information, see <https://www.agwa.name/projects/batv-tools>.
 
 
 HOW BATV-TOOLS WORKS
 
-Outgoing mail is passed through either batv-milter or batv-sign.  If a BATV key
-exists for the envelope sender, the envelope sender is rewritten to be a signed
-BATV address.
+Outgoing mail is passed through either batv-milter or batv-sign.  If a
+BATV key exists for the envelope sender, the envelope sender is rewritten
+to a signed BATV address.
 
-Incoming mail is passed through either batv-milter or batv-validate.  If it's
-addressed to a BATV address, the address is validated, and if the validation
-is successful, the address is rewritten to the original non-BATV address.
-The result of the validation ('valid' or 'invalid') is placed in the X-Batv-Status
-header.
+Incoming mail is passed through either batv-milter or batv-validate.
+The envelope recipient is validated and the result of the validation
+is placed in the X-Batv-Status header.  If the envelope recipient contains
+a valid BATV signature, it is rewritten to its original non-BATV form.
 
-batv-tools does not itself discard or reject any mail.  It's up to the user to filter
-any bounce (typically identified by a null envelope sender) which lacks a
-'X-Batv-Status: valid' header.  See doc/filtering.txt for documentation and examples.
+batv-milter can be configured to reject bounces which aren't addressed to
+a valid BATV signature, but by default, it is the user's responsibility
+to filter mail based on the X-Batv-Status header.
 
 
 BUILDING BATV-TOOLS
 
 Run 'make'.  To build only the standalone tools (and not the milter),
 run 'make all-tools'.
+
+
+GETTING UP AND RUNNING
+
+See doc/quickstart.milter.txt and doc/quickstart.standalone.txt for
+instructions on getting up-and-running quickly.
 
 
 DEPENDENCIES
@@ -68,7 +72,7 @@ headers for OpenSSL and libmilter.
 
 CURRENT STATUS
 
-The current version of batv-tools is 0.4, released on 2013-05-28.
+The current version of batv-tools is 0.5, released on 2013-12-???.
 batv-tools aims to be bug-free and reliable, meaning it shouldn't crash,
 malfunction, or do horrible things to your mail.  However, it has not
 yet reached maturity, meaning it is not as documented, featureful, or
@@ -87,7 +91,7 @@ rewriting the entire local part of the email address, the BATV token is
 appended to the local part after a sub-address delimiter (typically '+'
 or '-').  For example:
 
-	andrew+prvs=9352e50792@example.com
+        andrew+prvs=9352e50792@example.com
 
 Since many mail systems support sub-addressing, this syntax permits
 BATV-signed mail to be routed through mail servers that have no knowledge
@@ -113,6 +117,40 @@ standard syntax may require additional configuration from your MTA that
 isn't documented here.
 
 
+PROJECT RESOURCES
+
+Home page:      https://agwa.name/projects/batv-tools
+Git repository: https://agwa.name/git/batv-tools.git
+                https://github.com/AGWA/batv-tools.git (mirror)
+GitHub project: https://github.com/AGWA/batv-tools
+Issue tracker:  https://github.com/AGWA/batv-tools/issues
+Announce list:  http://lists.cloudmutt.com/mailman/listinfo/batv-tools-announce
+Discuss list:   http://lists.cloudmutt.com/mailman/listinfo/batv-tools-discuss
+
+For help or questions, send mail to the discuss list
+<batv-tools-discuss@lists.cloudmutt.com>.  To report a bug or make a
+feature request, please open an issue at GitHub or send mail to the
+discuss list.  To contribute code, please send a properly-formatted
+patch to the discuss list, or open a pull request at GitHub.
+
+
+DEBIAN PACKAGING
+
+Debian packaging, complete with an init script, can be found in the
+'debian' branch of the project Git repository.  The package is built
+using git-buildpackage as follows:
+
+  1. Check out the debian branch: `git checkout debian`
+  2. Build the package: `git-buildpackage`
+
+
+LEGALESE
+
+Copyright (C) 2013 Andrew Ayer
+Licensed under the GPLv3 with OpenSSL Linking Exception.
+See COPYING for details.
+
+
 FURTHER DOCUMENTATION AND EXAMPLES
 
-See files the 'doc' sub-directory.
+See files in the 'doc' sub-directory.

@@ -4,14 +4,14 @@ in the X-Batv-Status header to describe the result of the validation:
   * valid
         This message is addressed to a BATV address with a valid signature.
 	It can be considered a legitimate bounce.
-  * invalid; missing
+  * invalid, missing
         This message claims to be a bounce, but is not addressed to a BATV
         address.  It should be considered backscatter and be discarded.
-  * invalid; bad-signature
+  * invalid, bad-signature
         This message claims to be a bounce, but is addressed to a BATV
         address with an incorrect signature. It should be considered
         backscatter and be discarded.
-  * invalid; multiple-rcpt
+  * invalid, multiple-rcpt
         This message claims to be a bounce, but is addressed to multiple
         recipients in violation of the SMTP standard.  It should be
         considered backscatter and be discarded.

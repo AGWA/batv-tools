@@ -3,16 +3,16 @@ CHANGES TO BE AWARE OF FOR batv-tools 0.5
 The X-Batv-Status header has been enhanced to include the reason for invalidity:
 
 	X-Batv-Status: valid
-	X-Batv-Status: invalid; missing
-	X-Batv-Status: invalid; bad-signature
-	X-Batv-Status: invalid; multiple-rcpt
+	X-Batv-Status: invalid, missing
+	X-Batv-Status: invalid, bad-signature
+	X-Batv-Status: invalid, multiple-rcpt
 
 In the future we may add additional information to these headers. Please
 ensure your scripts consider any X-Batv-Status header STARTING WITH
 "valid" as valid, and any X-Batv-Status header STARTING WITH "invalid"
 as invalid.  DO NOT match the entire value.
 
-batv-milter now adds 'X-Batv-Status: invalid; bad-signature' to any bounce
+batv-milter now adds 'X-Batv-Status: invalid, bad-signature' to any bounce
 (i.e. message with null envelope sender) which isn't addressed to a BATV
 address (previously it added no X-Batv-Status header to such messages).
 Because of this change, it is now recommended that your filters discard

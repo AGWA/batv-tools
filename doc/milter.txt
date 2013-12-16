@@ -7,7 +7,7 @@ should work in other milter-supporting MTAs like Sendmail.
 For documentation on getting up-and-running with the milter, see
 doc/quickstart.milter.txt.
 
-By default, the milter adds a 'X-Batv-Status: invalid; ...' header
+By default, the milter adds a 'X-Batv-Status: invalid, ...' header
 to invalid bounces instead of outright rejecting them.  Consult
 doc/filtering.txt for documentation about filtering based on this header.
 If you'd rather reject invalid bounces at SMTP time, set the batv-milter

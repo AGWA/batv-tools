@@ -1,3 +1,10 @@
+batv-tools (0.5-1) unstable; urgency=low
+
+  * New upstream release.
+  * Use debhelper 9.
+
+ -- Andrew Ayer <agwa@andrewayer.name>  Tue, 17 Dec 2013 15:24:00 -0800
+
 batv-tools (0.4-1) unstable; urgency=low
 
   * New upstream release.

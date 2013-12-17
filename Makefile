@@ -1,6 +1,7 @@
 CXX = c++
-CXXFLAGS = -Wall -pedantic -ansi -Wno-long-long -O2
-LDFLAGS = -lcrypto
+CXXFLAGS ?= -Wall -pedantic -O2
+CXXFLAGS += -ansi -Wno-long-long
+LDFLAGS += -lcrypto
 LIBMILTER_LDFLAGS = -L/usr/lib/libmilter -lmilter -lpthread
 PREFIX = /usr/local
 
@@ -8,8 +9,8 @@ MILTER_PROGRAMS = batv-milter
 TOOLS_PROGRAMS = batv-validate batv-sign
 PROGRAMS = $(TOOLS_PROGRAMS) $(MILTER_PROGRAMS)
 
-COMMON_OBJFILES = address.o common.o key.o prvs.o
-MILTER_OBJFILES = config.o openssl-threads.o
+COMMON_OBJFILES = address.o common.o config.o key.o prvs.o verify.o
+MILTER_OBJFILES = config-milter.o openssl-threads.o
 
 all: all-tools all-milter
 

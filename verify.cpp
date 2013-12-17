@@ -28,13 +28,45 @@
  * as that of the covered work.
  */
 
+#include "verify.hpp"
+#include "prvs.hpp"
+#include "address.hpp"
+#include "key.hpp"
 #include "config.hpp"
-#include "common.hpp"
 
 using namespace batv;
 
-const Key* Common_config::get_key (const std::string& sender_address) const
+Verify_result batv::verify (const Email_address& env_rcpt, std::string* true_rcpt, const Common_config& config)
 {
-	return batv::get_key(keys, sender_address, !default_key.empty() ? &default_key : NULL);
+	bool		has_batv_rcpt;
+	Batv_address	batv_rcpt;
+	const Key*	rcpt_key;
+
+	if (batv_rcpt.parse(env_rcpt, config.sub_address_delimiter) && batv_rcpt.tag_type == "prvs") {
+		has_batv_rcpt = true;
+		*true_rcpt = batv_rcpt.orig_mailfrom.make_string();
+	} else {
+		has_batv_rcpt = false;
+		*true_rcpt = env_rcpt.make_string();
+	}
+
+	rcpt_key = config.get_key(*true_rcpt);
+
+	if (!rcpt_key) {
+		// The recipient of this message is not a BATV user b/c he doesn't have a key
+		return VERIFY_NONE;
+	}
+
+	if (!has_batv_rcpt) {
+		// This message was not signed with BATV...
+		return VERIFY_MISSING;
+	}
+
+	if (!prvs_validate(batv_rcpt, config.address_lifetime, *rcpt_key)) {
+		// Message has invalid BATV signature...
+		return VERIFY_BAD_SIGNATURE;
+	}
+
+	return VERIFY_SUCCESS;
 }
 

@@ -1,0 +1,37 @@
+[Common] Improve docs, write manpages, etc.
+
+[Milter] Config options to specify the exact socket owner/group (to be effected before dropping privileges)
+
+[Milter] Logging so we know when something goes wrong (syslog or just redirect stderr to a log file)
+
+[Common] Figure out better way to do expiration checking
+	right now lifetime needs to be known on both signing side and verifying side
+	perhaps cap the lifetime to 500 days and assume any difference greater than 500 is a wraparound when verifying?
+		actually 500 is too big... cap it lower and be very strict when verifying
+	unfortunately the standard is unspecific how this should work
+
+[Common] Ability to specify keys directly in keymap file (in hex form) (useful for procmail filter)
+	If value starts with / -> assume it's a file path and read it
+	Otherwise -> assume it's hex data and parse it
+
+[Milter] Ability to negate internal address
+	Idea: prefix with !
+
+[Common] Question: When checking batv_senders list, should we stop at + (or other configurable delimiter)???
+	i.e. so andrew@example.com also matches andrew+foo@example.com
+
+[Common] Key rollover support
+
+[Common] Config_error is becoming more about just config errors, but also initialization errors.  Rename it?
+
+[Milter] chdir to / when daemonizing
+
+[Common] Abstract away address type (e.g. prvs) handling
+
+[Common] Put common code into a "libbatv" which other apps (e.g. MUAs) could link with
+
+[Common] Use exclusively "validate" terminology instead of "verify" (the V in BATV stands for validation)
+
+[Milter] Set a rejection message when rejecting backscatter
+
+[Milter] Rejections should take place in response to RCPT TO, not DATA

@@ -1,3 +1,20 @@
+v0.5 (2013-12-17)
+  (See RELEASE_NOTES-0.5 for important details.)
+  * Enhance 'X-Batv-Status' header to specify reason for invalidity:
+     - valid
+     - invalid, missing
+     - invalid, bad-signature
+     - invalid, multiple-rcpt
+  * Add bounce detection logic to batv-milter itself, so it can add a
+    'X-Batv-Status: invalid, missing' header if a bounce is missing a
+    BATV signature.
+  * 'batv-filter -f' now adds a 'X-Batv-Status: invalid, missing' header
+    if message did not contain a BATV signature.
+  * Add 'on-invalid' option to batv-milter to specify what the milter
+    should do with invalid bounces ('accept', 'reject', or 'tempfail').
+    Default is 'accept', which was the behavior in previous releases.
+  * Improve documentation.
+
 v0.4 (2013-05-28)
   * Fix a build bug due to missing #includes.
 

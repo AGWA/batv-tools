@@ -28,13 +28,22 @@
  * as that of the covered work.
  */
 
-#include "config.hpp"
-#include "common.hpp"
+#pragma once
 
-using namespace batv;
+#include <string>
 
-const Key* Common_config::get_key (const std::string& sender_address) const
-{
-	return batv::get_key(keys, sender_address, !default_key.empty() ? &default_key : NULL);
+namespace batv {
+	struct Common_config;
+	struct Email_address;
+
+	enum Verify_result {
+		VERIFY_NONE,		// Message does not need to be validated
+		VERIFY_SUCCESS,		// Message successfully validated
+		VERIFY_MISSING,		// Message is missing BATV signature
+		VERIFY_BAD_SIGNATURE,	// Message has bad BATV signature
+		VERIFY_MULTIPLE_RCPT,	// Message has multiple recipients
+		VERIFY_ERROR		// There was an error during verification
+	};
+
+	Verify_result verify (const Email_address& env_rcpt, std::string* true_rcpt, const Common_config&);
 }
-

@@ -1,4 +1,4 @@
-v0.5 (NOT YET RELEASED)
+v0.5 (2013-12-17)
   (See RELEASE_NOTES-0.5 for important details.)
   * Enhance 'X-Batv-Status' header to specify reason for invalidity:
      - valid

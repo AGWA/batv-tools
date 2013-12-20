@@ -258,7 +258,7 @@ namespace {
 
 			if (result == VERIFY_SUCCESS) {
 				// Add a X-Batv-Delivered-To header containing the envelope recipient, pre-rewrite
-				if (smfi_addheader(ctx, const_cast<char*>("X-Batv-Delivered-To"), const_cast<char*>(batv_ctx->env_rcpt.c_str())) == MI_FAILURE) {
+				if (smfi_addheader(ctx, const_cast<char*>("X-Batv-Delivered-To"), const_cast<char*>(batv_ctx->env_rcpt.c_str())) == MI_FAILURE) { // TODO: I should probably be filling this with the *canonicalized* env recipient, since you don't see angle brackets in the normal Delivered-To header.
 					std::clog << "on_eom: smfi_addheader failed (2)" << std::endl;
 					batv_ctx->clear_message_state();
 					return milter_status(config->on_internal_error);

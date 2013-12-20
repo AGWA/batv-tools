@@ -35,3 +35,7 @@
 [Milter] Set a rejection message when rejecting backscatter
 
 [Milter] Rejections should take place in response to RCPT TO, not DATA
+
+[Build] Generate source tarballs
+
+[Build] (Probably) use autoconf and (maybe) automake

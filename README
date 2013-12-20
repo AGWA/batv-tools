@@ -144,13 +144,19 @@ using git-buildpackage as follows:
   2. Build the package: `git-buildpackage`
 
 
-LEGALESE
-
-Copyright (C) 2013 Andrew Ayer
-Licensed under the GPLv3 with OpenSSL Linking Exception.
-See COPYING for details.
-
-
 FURTHER DOCUMENTATION AND EXAMPLES
 
 See files in the 'doc' sub-directory.
+
+
+LEGALESE
+
+Copyright (C) 2013 Andrew Ayer
+
+Licensed under the GPLv3 with OpenSSL Linking Exception.
+
+batv-tools is distributed in the hope that it will be useful, but WITHOUT
+ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+FITNESS FOR A PARTICULAR PURPOSE.
+
+See COPYING and COPYING.openssl for details.

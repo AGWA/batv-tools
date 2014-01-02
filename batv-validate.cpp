@@ -297,12 +297,16 @@ try {
 
 	// Do the validation/filtering
 	if (is_filter) {
+		std::ios_base::sync_with_stdio(false);
+		std::cin.tie(NULL);
 		filter(config, std::cin, std::cout);
 
 	} else {
 		std::vector<Email_address>	rcpt_tos;
 		if (is_mail_input) {
 			// Get the possible envelope recipients from the message on stdin
+			std::ios_base::sync_with_stdio(false);
+			std::cin.tie(NULL);
 			rcpt_tos = parse_mail(config, std::cin);
 			if (rcpt_tos.empty()) {
 				// no envelope recipient header found

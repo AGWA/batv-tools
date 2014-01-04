@@ -33,11 +33,11 @@ clean:
 install: install-tools install-milter
 
 install-tools:
-	install -m 755 batv-validate $(PREFIX)/bin/
-	install -m 755 batv-sign $(PREFIX)/bin/
-	install -m 755 batv-sendmail $(PREFIX)/bin/
+	install -m 755 batv-validate $(DESTDIR)$(PREFIX)/bin/
+	install -m 755 batv-sign $(DESTDIR)$(PREFIX)/bin/
+	install -m 755 batv-sendmail $(DESTDIR)$(PREFIX)/bin/
 
 install-milter:
-	install -m 755 batv-milter $(PREFIX)/sbin/
+	install -m 755 batv-milter $(DESTDIR)$(PREFIX)/sbin/
 
 .PHONY: all all-tools all-milter clean install install-tools install-milter

@@ -11,7 +11,6 @@ else
 	# If we're root, require a key path be explicitly specified on the command line with -f
 	keyfile=
 fi
-BITS=64
 
 while [ $# -gt 0 ]
 do

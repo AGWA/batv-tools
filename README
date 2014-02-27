@@ -153,10 +153,12 @@ LEGALESE
 
 Copyright (C) 2013 Andrew Ayer
 
-Licensed under the GPLv3 with OpenSSL Linking Exception.
+Licensed predominantly under the GPLv3 with OpenSSL Linking Exception.
+May also contain code licensed under less restrictive GPL-compatible
+licenses.
 
 batv-tools is distributed in the hope that it will be useful, but WITHOUT
 ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
 FITNESS FOR A PARTICULAR PURPOSE.
 
-See COPYING and COPYING.openssl for details.
+See COPYING for details.

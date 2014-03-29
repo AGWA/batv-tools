@@ -38,7 +38,8 @@ automated/simplified for you.
 		is considered "internal."  This option can be specified
 		multiple times, once for each internal host/subnet.
 		Only mail originating from these hosts/subnets (or from
-		authenticated senders) is signed with BATV.
+		authenticated senders) is signed with BATV.  Both IPv4
+		and IPv6 addresses are supported.
 
 		sub-address-delimiter -- use the non-standard BATV
 		meta syntax based on sub-addressing using the given

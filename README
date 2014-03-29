@@ -141,7 +141,7 @@ Debian packaging, complete with an init script, can be found in the
 using git-buildpackage as follows:
 
   1. Check out the debian branch: `git checkout debian`
-  2. Build the package: `git-buildpackage`
+  2. Build the package: `git-buildpackage -uc -us`
 
 
 FURTHER DOCUMENTATION AND EXAMPLES

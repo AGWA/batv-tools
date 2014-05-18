@@ -125,7 +125,7 @@ void batv::daemonize (const std::string& pid_file, const std::string& stderr_fil
 	}
 	if (pid != 0) {
 		// Exit parent
-		std::exit(0);
+		_exit(0);
 	}
 	setsid();
 

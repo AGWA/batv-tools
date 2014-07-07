@@ -1,6 +1,6 @@
 CXX = c++
 CXXFLAGS ?= -Wall -pedantic -O2
-CXXFLAGS += -ansi -Wno-long-long
+CXXFLAGS += -Wno-long-long
 LDFLAGS += -lcrypto
 LIBMILTER_LDFLAGS = -L/usr/lib/libmilter -lmilter -lpthread
 PREFIX = /usr/local

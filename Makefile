@@ -19,13 +19,13 @@ all-tools: $(TOOLS_PROGRAMS)
 all-milter: $(MILTER_PROGRAMS)
 
 batv-milter: $(COMMON_OBJFILES) $(MILTER_OBJFILES) batv-milter.o
-	$(CXX) $(CXXFLAGS) -o $@ $^ $(LDFLAGS) $(LIBMILTER_LDFLAGS)
+	$(CXX) $(CXXFLAGS) -o $@ $(COMMON_OBJFILES) $(MILTER_OBJFILES) batv-milter.o $(LDFLAGS) $(LIBMILTER_LDFLAGS)
 
 batv-validate: $(COMMON_OBJFILES) batv-validate.o
-	$(CXX) $(CXXFLAGS) -o $@ $^ $(LDFLAGS)
+	$(CXX) $(CXXFLAGS) -o $@ $(COMMON_OBJFILES) batv-validate.o $(LDFLAGS)
 
 batv-sign: $(COMMON_OBJFILES) batv-sign.o
-	$(CXX) $(CXXFLAGS) -o $@ $^ $(LDFLAGS)
+	$(CXX) $(CXXFLAGS) -o $@ $(COMMON_OBJFILES) batv-sign.o $(LDFLAGS)
 
 clean:
 	rm -f *.o $(PROGRAMS)

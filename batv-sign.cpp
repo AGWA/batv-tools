@@ -100,23 +100,6 @@ try {
 	}
 
 	// Load the key
-	if (key_file.empty()) {
-		if (const char* home_dir = std::getenv("HOME")) {
-			key_file = home_dir;
-		}
-		key_file += "/.batv-key";
-		if (access(key_file.c_str(), R_OK) == -1) {
-			if (errno != ENOENT) {
-				std::clog << argv[0] << ": " << key_file << ": " << strerror(errno) << std::endl;
-				return 1;
-			}
-			key_file.clear();
-		}
-	} else if (access(key_file.c_str(), R_OK) == -1) {
-		std::clog << argv[0] << ": " << key_file << ": " << strerror(errno) << std::endl;
-		return 1;
-	}
-
 	check_personal_key_path(key_file, ".batv-key");
 	check_personal_key_path(key_map_file, ".batv-keys");
 

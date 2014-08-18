@@ -39,7 +39,7 @@ namespace batv {
 	typedef std::vector<unsigned char> Key;
 	typedef std::map<std::string, Key> Key_map;
 
-	void		load_key (Key& key, std::istream& key_file_in);
+	void		load_key (Key& key, const std::string& key_file_path);
 	void		load_key_map (Key_map& key_map, std::istream& key_map_file_in);
 
 	// Get HMAC key for given sender from the key map:

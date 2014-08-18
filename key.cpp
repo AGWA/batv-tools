@@ -35,13 +35,21 @@
 
 using namespace batv;
 
-void	batv::load_key (Key& key, std::istream& key_file_in)
+void	batv::load_key (Key& key, const std::string& key_file_path)
 {
+	std::ifstream		key_file_in(key_file_path.c_str());
+	if (!key_file_in) {
+		throw Config_error("Unable to open key file " + key_file_path);
+	}
+
 	key.clear();
 	while (key_file_in.good() && key_file_in.peek() != -1) {
 		char	ch;
 		key_file_in.get(ch);
 		key.push_back(ch);
+	}
+	if (key.empty()) {
+		throw Config_error("Key file " + key_file_path + " is empty");
 	}
 }
 
@@ -66,11 +74,7 @@ void	batv::load_key_map (Key_map& key_map, std::istream& in)
 		std::getline(in, key_file_path);
 
 		// Load the keyfile 
-		std::ifstream		key_file_in(key_file_path.c_str());
-		if (!key_file_in) {
-			throw Config_error("Unable to open key file " + key_file_path);
-		}
-		load_key(key_map[address], key_file_in);
+		load_key(key_map[address], key_file_path);
 	}
 }
 

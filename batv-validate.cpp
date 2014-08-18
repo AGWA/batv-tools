@@ -287,8 +287,7 @@ try {
 	}
 
 	if (!key_file.empty()) {
-		std::ifstream	key_in(key_file.c_str());
-		load_key(config.default_key, key_in);
+		load_key(config.default_key, key_file);
 	}
 	if (!key_map_file.empty()) {
 		std::ifstream	key_map_in(key_map_file.c_str());

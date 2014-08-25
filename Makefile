@@ -33,6 +33,7 @@ clean:
 install: install-tools install-milter
 
 install-tools:
+	install -m 755 batv-keygen $(DESTDIR)$(PREFIX)/bin/
 	install -m 755 batv-validate $(DESTDIR)$(PREFIX)/bin/
 	install -m 755 batv-sign $(DESTDIR)$(PREFIX)/bin/
 	install -m 755 batv-sendmail $(DESTDIR)$(PREFIX)/bin/

@@ -55,10 +55,11 @@ namespace {
 	{
 		std::clog << "Usage:" << std::endl;
 		std::clog << " " << argv0 << " [OPTIONS...] BATV-ADDRESS" << std::endl;
-		std::clog << " " << argv0 << " [-f|-m] [OPTIONS...]" << std::endl;
+		std::clog << " " << argv0 << " -m [OPTIONS...]" << std::endl;
+		std::clog << " " << argv0 << " -f [OPTIONS...]" << std::endl;
 		std::clog << "Options:" << std::endl;
-		std::clog << " -f                 -- filter message on stdin, add X-Batv-Status header" << std::endl;
 		std::clog << " -m                 -- read message from stdin, validate the recipient address" << std::endl;
+		std::clog << " -f                 -- filter message on stdin, add X-Batv-Status header" << std::endl;
 		std::clog << " -k KEY_FILE        -- path to key file (default: ~/.batv-key)" << std::endl;
 		std::clog << " -K KEY_MAP_FILE    -- path to key map file (default: ~/.batv-keys)" << std::endl;
 		std::clog << " -l LIFETIME        -- lifetime, in days, of BATV addresses (default: 7)" << std::endl;

@@ -53,6 +53,10 @@ if [[ -n $BATV_KEY_FILE ]]
 then
 	batv_options+=("-k" "$BATV_KEY_FILE")
 fi
+if [[ -n $BATV_KEY_MAP_FILE ]]
+then
+	batv_options+=("-K" "$BATV_KEY_MAP_FILE")
+fi
 if [[ -n $BATV_LIFETIME ]]
 then
 	batv_options+=("-l" "$BATV_LIFETIME")

@@ -7,7 +7,7 @@ Build-Depends: debhelper (>= 9), libssl-dev, libmilter-dev (>= 8.14.0)
 
 Package: batv-tools
 Architecture: any
-Depends: ${shlibs:Depends}, ${misc:Depends}
+Depends: ${shlibs:Depends}, ${misc:Depends}, openssl
 Description: Standalone tools for Bounce Address Tag Validation
  Bounce Address Tag Validation (BATV) is a method for detecting and blocking
  backscatter.  It works by embedding a cryptographic token in the envelope

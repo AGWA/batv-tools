@@ -1,0 +1,34 @@
+.TH "BATV-SENDMAIL" "1" "2014-08-26" "Andrew Ayer" "BATV-TOOLS"
+.SH "NAME"
+batv-sendmail \- Send mail with a BATV-signed envelope sender address
+.SH "SYNOPSIS"
+.nf
+\fBbatv-sendmail\fR -f \fIsender\fR [\fIsendmail-option\fR ...] [\fIrecipient\fR ...]
+.fi
+.SH "DESCRIPTION"
+By default, \fBbatv-sendmail\fR reads a message from standard input until EOF or until it reads a line with only a . character, and sends it via sendmail(1) with a BATV-signed envelope sender address.  It accepts the same command line options as sendmail(1), though unlike sendmail, it requires the (pre-BATV) envelope sender to be specified by the -f option.
+.SH "OPTIONS"
+.TP
+.BI \-f\ \fIsender\fR
+The envelope sender address to be signed with BATV.
+.SH "ENVIRONMENT VARIABLES"
+.TP
+.BI BATV_KEY_FILE
+BATV key file to use.  Corresponds to the -k option of batv-sign(1).
+.TP
+.BI BATV_KEY_MAP_FILE
+BATV key map file to use.  Corresponds to the -K option of batv-sign(1).
+.TP
+.BI BATV_LIFETIME
+Lifetime, in days, of the BATV signature.  Corresponds to the -l option of batv-sign(1).
+.TP
+.BI BATV_DELIMITER
+Sub address delimiter to use in the BATV signature.  Corresponds to the -d option of batv-sign(1).
+.SH "BUGS"
+It's not guaranteed that all sendmail(1) options are supported.
+
+-o options that require an argument are not properly passed through to sendmail(1).
+
+The -f option should not be mandatory; batv-sendmail should choose a default based on the username and the system's mail name.
+.SH "SEE ALSO"
+batv-sign(1), batv-validate(1), batv-milter(8), batv-keygen(1)

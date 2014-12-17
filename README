@@ -72,7 +72,7 @@ headers for OpenSSL and libmilter.
 
 CURRENT STATUS
 
-The current version of batv-tools is 0.5, released on 2013-12-17.
+The current version of batv-tools is 0.6, released on 2014-12-16.
 batv-tools aims to be bug-free and reliable, meaning it shouldn't crash,
 malfunction, or do horrible things to your mail.  However, it has not
 yet reached maturity, meaning it is not as documented, featureful, or

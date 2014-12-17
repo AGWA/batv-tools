@@ -48,7 +48,7 @@ looking to configure the BATV milter, see quickstart.milter.txt.
 
 		set sendmail = "batv-sendmail -f YOURADDRESS -i"
 
-	For other MUAs, consult the documentation.
+	For other MUAs, consult their documentation.
 
 
 3. FILTER INCOMING BOUNCES THROUGH batv-validate

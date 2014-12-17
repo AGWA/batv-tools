@@ -41,11 +41,12 @@ automated/simplified for you.
 		authenticated senders) is signed with BATV.  Both IPv4
 		and IPv6 addresses are supported.
 
-		sub-address-delimiter -- use the non-standard BATV
-		meta syntax based on sub-addressing using the given
-		sub-address delimiter (typically '+').  This syntax is
+		sub-address-delimiter -- if this option is specified,
+		batv-milter uses the non-standard BATV meta syntax based
+		on sub-addressing.  This option specifies the sub-address
+		delimiter (typically '+').  The non-standard syntax is
 		recommended because it has several advantages over the
-		standard syntax, as described in README.
+		standard syntax, as described in the README.
 
 		user, group -- the user and group which batv-milter
 		should run as.  It is highly recommended that you run
@@ -53,16 +54,19 @@ automated/simplified for you.
 
 		on-invalid -- set this to 'accept' or 'reject' to control
 		what the milter does with invalid bounces.  The default
-		is accept.
+		is accept (if set to 'accept', invalid bounces can be filtered
+		later in the pipeline by consulting the X-Batv-Status header,
+		as described below).
 
 
 2. CONFIGURE YOUR KEY MAP FILE
 
 	The key map (whose path is specified by the key-map option,
 	typically set to /etc/batv-keys.conf) maps senders to key files.
-	You can specify either an entire email address or just a domain
-	name.  The following key map file instructs batv-milter to sign
-	all outgoing mail from example.com using the key in /etc/batv-key:
+	You can specify an entire email address or you can omit the local
+	part to match an entire domain.  The following key map file
+	instructs batv-milter to sign all outgoing mail from example.com
+	using the key in /etc/batv-key:
 
 		@example.com /etc/batv-key
 
@@ -94,7 +98,7 @@ automated/simplified for you.
 		recipient_delimiter = +
 
 	If you aren't using the sub-address syntax, you'll need to
-	configure your MTA not to treat BATV addresses as unknown local
+	configure your MTA to not treat BATV addresses as unknown local
 	recipients.  This is complicated and beyond the scope of this
 	document, which is why the sub-address syntax is recommended.
 
@@ -108,9 +112,10 @@ automated/simplified for you.
 
 	Start the batv-milter daemon by running:
 
-		batv-milter --config /path/to/config
+		batv-milter --daemon yes --config /path/to/config
 
-	Make sure this runs when the system boots.
+	Make sure this runs when the system boots (note: the Debian package
+	provides an init script to do this for you).
 
 	Restart your MTA so it starts using the milter.
 

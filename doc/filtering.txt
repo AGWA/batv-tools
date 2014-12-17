@@ -16,10 +16,10 @@ in the X-Batv-Status header to describe the result of the validation:
         recipients in violation of the SMTP standard.  It should be
         considered backscatter and be discarded.
 
-(Future versions of batv-tools may include additional information in the
-X-Batv-Status header, so you should assume any header value starting with
-"valid" means valid, and any header value starting with "invalid" means
-invalid.)
+IMPORTANT: Future versions of batv-tools may include additional
+information in the X-Batv-Status header, so you should assume any header
+value starting with "valid" means valid, and any header value starting
+with "invalid" means invalid.
 
 batv-milter and 'batv-validate -f' always add a 'X-Batv-Status: valid'
 header if the envelope is addressed to a valid BATV address.  However,

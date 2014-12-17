@@ -1,3 +1,12 @@
+batv-tools (0.6-1~agwa1) unstable; urgency=low
+
+  * New upstream release.
+  * Also install batv-keygen.
+  * Install man pages, documentation, examples.
+  * Modernize Debian packaging.
+
+ -- Andrew Ayer <agwa@andrewayer.name>  Tue, 16 Dec 2014 20:25:03 -0800
+
 batv-tools (0.5-1) unstable; urgency=low
 
   * New upstream release.

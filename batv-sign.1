@@ -1,0 +1,24 @@
+.TH "BATV-SIGN" "1" "2014-08-26" "Andrew Ayer" "BATV-TOOLS"
+.SH "NAME"
+batv-sign \- Generate a BATV key
+.SH "SYNOPSIS"
+.nf
+\fBbatv-sign\fR [\fIoptions\fR ...] \fIfromaddress\fR
+.fi
+.SH "DESCRIPTION"
+\fBbatv-sign\fR signs \fIfromaddress\fR with BATV and outputs the signed envelope sender address to standard out.
+.SH "OPTIONS"
+.TP
+.BI \-k\ \fIkeyfile\fR
+Use the key in \fIkeyfile\fR.  Use batv-keygen(1) to generate a key.  (Default: ~/.batv-key)
+.TP
+.BI \-K\ \fIkeymapfile\fR
+Use the key map file in \fIkeymapfile\fR.  (Default: ~/.batv-keys)
+.TP
+.BI \-l\ \fIlifetime\fR
+Lifetime, in days, of the signature. (Default: 7)
+.TP
+.BI \-d\ \fIdelimiter\fR
+Use \fIdelimiter\fR as the sub address delimiter of the signed BATV address.  \fIdelimiter\fR must be a single character and must be recognized by \fIfromaddress\fR's MTA as a sub address delimiter.  (Default: +)
+.SH "SEE ALSO"
+batv-validate(1), batv-sendmail(1), batv-milter(8), batv-keygen(1)

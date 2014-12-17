@@ -41,7 +41,11 @@ static void locking_callback (int mode, int n, const char* file, int line)
  
 static unsigned long id_callback ()
 {
-	return pthread_self();
+	// pthread_self() returns a pthread_t; OpenSSL needs an unsigned long.
+	// On Linux pthread_t is an integer and on FreeBSD it's a pointer,
+	// so in both cases it's OK to reinterpret_cast to an unsigned long.
+	// Although ugly, the consensus is that this is the right way to do this.
+	return reinterpret_cast<unsigned long>(pthread_self());
 }
  
 void openssl_init_threads ()

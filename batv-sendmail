@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # This script works in both bash and ksh93.  It uses arrays and the getopts
-# builtin so it doesn't work in the Bourne shell.
+# builtin so it doesn't work in a POSIX shell.
 
 sender= # TODO: perhaps set a default sender based on $LOGNAME and /etc/mailname or FQDN?
 
@@ -52,6 +52,10 @@ fi
 if [[ -n $BATV_KEY_FILE ]]
 then
 	batv_options+=("-k" "$BATV_KEY_FILE")
+fi
+if [[ -n $BATV_KEY_MAP_FILE ]]
+then
+	batv_options+=("-K" "$BATV_KEY_MAP_FILE")
 fi
 if [[ -n $BATV_LIFETIME ]]
 then

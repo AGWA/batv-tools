@@ -1,4 +1,12 @@
-[Common] Improve docs, write manpages, etc.
+[Common] Improve docs, manpages, etc.
+	manpages need:
+		documentation of key map files
+		better milter man page
+			document X-Batv-Status header
+			...
+		better formatting
+
+[Milter] Clean up stale sockets, either in milter itself or in init script
 
 [Milter] Config options to specify the exact socket owner/group (to be effected before dropping privileges)
 
@@ -35,3 +43,7 @@
 [Milter] Set a rejection message when rejecting backscatter
 
 [Milter] Rejections should take place in response to RCPT TO, not DATA
+
+[Build] Generate source tarballs
+
+[Build] (Probably) use autoconf and (maybe) automake

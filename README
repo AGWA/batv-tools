@@ -72,7 +72,7 @@ headers for OpenSSL and libmilter.
 
 CURRENT STATUS
 
-The current version of batv-tools is 0.5, released on 2013-12-???.
+The current version of batv-tools is 0.6, released on 2014-12-16.
 batv-tools aims to be bug-free and reliable, meaning it shouldn't crash,
 malfunction, or do horrible things to your mail.  However, it has not
 yet reached maturity, meaning it is not as documented, featureful, or
@@ -124,8 +124,8 @@ Git repository: https://agwa.name/git/batv-tools.git
                 https://github.com/AGWA/batv-tools.git (mirror)
 GitHub project: https://github.com/AGWA/batv-tools
 Issue tracker:  https://github.com/AGWA/batv-tools/issues
-Announce list:  http://lists.cloudmutt.com/mailman/listinfo/batv-tools-announce
-Discuss list:   http://lists.cloudmutt.com/mailman/listinfo/batv-tools-discuss
+Announce list:  https://lists.cloudmutt.com/mailman/listinfo/batv-tools-announce
+Discuss list:   https://lists.cloudmutt.com/mailman/listinfo/batv-tools-discuss
 
 For help or questions, send mail to the discuss list
 <batv-tools-discuss@lists.cloudmutt.com>.  To report a bug or make a
@@ -141,16 +141,24 @@ Debian packaging, complete with an init script, can be found in the
 using git-buildpackage as follows:
 
   1. Check out the debian branch: `git checkout debian`
-  2. Build the package: `git-buildpackage`
-
-
-LEGALESE
-
-Copyright (C) 2013 Andrew Ayer
-Licensed under the GPLv3 with OpenSSL Linking Exception.
-See COPYING for details.
+  2. Build the package: `git-buildpackage -uc -us`
 
 
 FURTHER DOCUMENTATION AND EXAMPLES
 
 See files in the 'doc' sub-directory.
+
+
+LEGALESE
+
+Copyright (C) 2013 Andrew Ayer
+
+Licensed predominantly under the GPLv3 with OpenSSL Linking Exception.
+May also contain code licensed under less restrictive GPL-compatible
+licenses.
+
+batv-tools is distributed in the hope that it will be useful, but WITHOUT
+ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+FITNESS FOR A PARTICULAR PURPOSE.
+
+See COPYING for details.

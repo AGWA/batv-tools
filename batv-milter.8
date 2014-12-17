@@ -1,0 +1,67 @@
+.TH "BATV-MILTER" "8" "2014-08-26" "Andrew Ayer" "BATV-TOOLS"
+.SH "NAME"
+batv-milter \- Sendmail-compatible milter for generating and validating BATV signatures
+.SH "SYNOPSIS"
+.nf
+\fBbatv-milter\fR [ \fB\-\-\fIoption-name\fR\fB \fIoption-value\fR ... ]
+.fi
+.SH "DESCRIPTION"
+\fBbatv-milter\fR is a Sendmail-compatible milter that implements the BATV system for stop backscatter. Outgoing messages have their envelope senders signed with BATV, and incoming bounces have their envelope recipients validated with BATV.
+.SH "OPTIONS"
+Options can be specified either on the command line or in a configuration file.  When specified on the command line, the syntax is \fB\-\-\fIoption-name\fR\fB \fIoption-value\fR.  When specified in a configuration file, the syntax is \fB\fIoption-name\fR\fB \fIoption-value\fR, with one option per line.
+.LP
+The following options are supported:
+.TP
+.BI \-\-config \ \fIfilename\fR
+Load additional configuration options from \fIfilename\fR, where each line corresponds
+to one command line option, but with the leading '--' removed.  Blank lines and lines
+starting with '#' are ignored.
+
+Config files can recursively include other config files via the \fBconfig\fR option.
+.TP
+.BI \-\-daemon \ \fByes\fR\ |\ \fBno\fR
+If set to "yes," daemonize after initialization is complete.  Defaults to "no."
+.TP
+.BI --pid-file \ \fIfilename\fR
+After daemonizing, write PID to \fIfilename\fR. (default: no PID file is written)
+.TP
+.BI --user \ \fIusername\fR
+.TP
+.BI --group \ \fIgroupname\fR
+Run batv-milter as the given user and group. (default: batv-milter runs as whatever user/group started it)
+.TP
+.BI --socket \ \fIspec\fR
+Address or path to the milter socket.  \fIspec\fR may take one of the following two forms: 1.) \fIunix:\fIpath\fR, \fIlocal:\fIpath\fR, or just \fIpath\fR to use a UNIX domain socket at the given \fIpath\fR; or 2.) \fIinet:port[@host]\fR or \fIinet6:port[@host]\fR to listen on the given TCP \fIport\fR on the interface for \fIhost\fR in the specified address family.  \fIhost\fR may be specified as a hostname or an IP address, and if omitted, batv-milter will listen on all interfaces.
+
+Using a UNIX domain socket is recommended since it allows you to use file permissions to ensure that only your MTA can connect to the milter.  Note that if you use Postfix, you may want to put the socket file in /var/spool/postfix so it's accessible even when Postfix is chroot'd.
+
+This option has no default and is mandatory.
+.TP
+.BI --socket-mode \ \fIoctal-mode\fR
+Socket file permissions, in octal (e.g. 660).  You should ensure that only your MTA has access to the socket file. Only applicable when using a UNIX domain socket. (default: use the umask)
+.TP
+.BI --mode \ \fBsign\fR\ |\ \fBverify\fR\ |\ \fBboth\fR
+If set to \fBsign\fR, batv-milter only signs outgoing mail and does not validate BATV signatures of incoming mail.  If set to \fBverify\fR, batv-milter only validates BATV signatures of incoming mail and does not sign outgoing mail.  If set to \fBboth\fR (the default), batv-milter does both signing and validating. (default: both)
+.TP
+.BI --lifetime \ \fIlifetime\fR
+Lifetime, in days, of BATV signatures. (default: 7)
+.TP
+.BI --internal-host \ \fIip-address-or-subnet\fR
+Specify that mail from the given IPv4 or IPv6 address, optionally with a prefix length (e.g. /24) for subnets, should be signed.  This option may be specified multiple times.  Note that locally-submitted mail, and authenticated mail, is always signed.
+.TP
+.BI --sub-address-delimiter \ \fIdelimiter\fR
+Instead of using standard BATV address meta-syntax, use sub address meta-syntax, with \fIdelimiter\fR as the sub address delimiter.  \fIdelimiter\fR must be a single character and must be recognized by your MTA as a sub address delimiter. (default: none; standard BATV address meta-syntax is used, instead of sub address meta-syntax)
+.TP
+.BI --key-map \ \fIfilename\fR
+Read the key map from \fIfilename\fR.
+.TP
+.BI --on-invalid \ \fBtempfail\fR \ | \ \fBaccept\fR \ | \ \fBreject\fR
+What to do with bounces with invalid BATV addresses.  If set to "accept", the invalid status is recorded in the X-Batv-Status header, so a later part of the mail pipeline can filter it out.  (default: accept)
+.TP
+.BI --on-internal-error \ \fBtempfail\fR \ | \ \fBaccept\fR \ | \ \fBreject\fR
+What to do with messages that cause an internal error. (default: tempfail)
+.TP
+.BI --debug \ \fIlevel\fR
+Set the debug level to \fIlevel\fR.
+.SH "SEE ALSO"
+batv-sign(1), batv-validate(1), batv-sendmail(1), batv-keygen(1)

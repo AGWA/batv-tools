@@ -258,7 +258,7 @@ namespace {
 
 			if (result == VERIFY_SUCCESS) {
 				// Add a X-Batv-Delivered-To header containing the envelope recipient, pre-rewrite
-				if (smfi_addheader(ctx, const_cast<char*>("X-Batv-Delivered-To"), const_cast<char*>(batv_ctx->env_rcpt.c_str())) == MI_FAILURE) {
+				if (smfi_addheader(ctx, const_cast<char*>("X-Batv-Delivered-To"), const_cast<char*>(batv_ctx->env_rcpt.c_str())) == MI_FAILURE) { // TODO: I should probably be filling this with the *canonicalized* env recipient, since you don't see angle brackets in the normal Delivered-To header.
 					std::clog << "on_eom: smfi_addheader failed (2)" << std::endl;
 					batv_ctx->clear_message_state();
 					return milter_status(config->on_internal_error);
@@ -318,6 +318,16 @@ namespace {
 					 // data again but libmilter complains if it's not NULL'ed out.
 		return SMFIS_CONTINUE; // return value doesn't matter in on_close()
 	}
+
+	const char* get_socket_path (const std::string& conn_spec)
+	{
+		if (conn_spec.substr(0, 5) == "unix:") {
+			return conn_spec.c_str() + 5;
+		} else if (conn_spec.substr(0, 6) == "local:") {
+			return conn_spec.c_str() + 6;
+		}
+		return NULL;
+	}
 }
 
 int main (int argc, const char** argv)
@@ -370,15 +380,17 @@ int main (int argc, const char** argv)
 
 	std::string		conn_spec;
 	if (config->socket_spec[0] == '/') {
-		// If the socket starts with a /, assume it's a path to a UNIX
-		// domain socket and treat it specially.
-		if (access(config->socket_spec.c_str(), F_OK) == 0) {
-			std::clog << config->socket_spec << ": socket file already exists" << std::endl;
-			return 1;
-		}
+		// If the socket starts with a /, assume it's a path to a UNIX domain socket
 		conn_spec = "unix:" + config->socket_spec;
 	} else {
 		conn_spec = config->socket_spec;
+	}
+
+	if (const char* path = get_socket_path(conn_spec)) {
+		if (access(path, F_OK) == 0) {
+			std::clog << path << ": socket file already exists" << std::endl;
+			return 1;
+		}
 	}
 
 	drop_privileges(config->user_name, config->group_name);
@@ -420,8 +432,8 @@ int main (int argc, const char** argv)
 	// Clean up
 	openssl_cleanup_threads();
 
-	if (config->socket_spec[0] == '/') {
-		unlink(config->socket_spec.c_str());
+	if (const char* path = get_socket_path(conn_spec)) {
+		unlink(path);
 	}
 	if (!config->pid_file.empty()) {
 		unlink(config->pid_file.c_str());

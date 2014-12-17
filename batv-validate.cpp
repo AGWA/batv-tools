@@ -55,10 +55,11 @@ namespace {
 	{
 		std::clog << "Usage:" << std::endl;
 		std::clog << " " << argv0 << " [OPTIONS...] BATV-ADDRESS" << std::endl;
-		std::clog << " " << argv0 << " [-f|-m] [OPTIONS...]" << std::endl;
+		std::clog << " " << argv0 << " -m [OPTIONS...]" << std::endl;
+		std::clog << " " << argv0 << " -f [OPTIONS...]" << std::endl;
 		std::clog << "Options:" << std::endl;
-		std::clog << " -f                 -- filter message on stdin, add X-Batv-Status header" << std::endl;
 		std::clog << " -m                 -- read message from stdin, validate the recipient address" << std::endl;
+		std::clog << " -f                 -- filter message on stdin, add X-Batv-Status header" << std::endl;
 		std::clog << " -k KEY_FILE        -- path to key file (default: ~/.batv-key)" << std::endl;
 		std::clog << " -K KEY_MAP_FILE    -- path to key map file (default: ~/.batv-keys)" << std::endl;
 		std::clog << " -l LIFETIME        -- lifetime, in days, of BATV addresses (default: 7)" << std::endl;
@@ -287,8 +288,7 @@ try {
 	}
 
 	if (!key_file.empty()) {
-		std::ifstream	key_in(key_file.c_str());
-		load_key(config.default_key, key_in);
+		load_key(config.default_key, key_file);
 	}
 	if (!key_map_file.empty()) {
 		std::ifstream	key_map_in(key_map_file.c_str());
@@ -297,12 +297,16 @@ try {
 
 	// Do the validation/filtering
 	if (is_filter) {
+		std::ios_base::sync_with_stdio(false);
+		std::cin.tie(NULL);
 		filter(config, std::cin, std::cout);
 
 	} else {
 		std::vector<Email_address>	rcpt_tos;
 		if (is_mail_input) {
 			// Get the possible envelope recipients from the message on stdin
+			std::ios_base::sync_with_stdio(false);
+			std::cin.tie(NULL);
 			rcpt_tos = parse_mail(config, std::cin);
 			if (rcpt_tos.empty()) {
 				// no envelope recipient header found

@@ -31,6 +31,7 @@
 #include "config-milter.hpp"
 #include "common.hpp"
 #include <arpa/inet.h>
+#include <sys/socket.h>
 #include <stdint.h>
 #include <cstring>
 #include <cstdlib>

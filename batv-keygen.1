@@ -1,0 +1,17 @@
+.TH "BATV-KEYGEN" "1" "2014-08-26" "Andrew Ayer" "BATV-TOOLS"
+.SH "NAME"
+batv-keygen \- Generate a BATV key
+.SH "SYNOPSIS"
+.nf
+\fBbatv-keygen\fR [-f \fIkeyfile\fR]
+.fi
+.SH "DESCRIPTION"
+\fBbatv-keygen\fR generates a random key for use with batv-sign(1) or batv-milter(1).
+
+When run as a non-root user with no command line options, \fBbatv-keygen\fR stores the key in ~/.batv-key.  To specify a different key file location, use the \fB-f\fR option.
+.SH "OPTIONS"
+.TP
+.BI \-f\ \fIkeyfile\fR
+Store the key in \fIkeyfile\fR.
+.SH "SEE ALSO"
+batv-sign(1), batv-validate(1), batv-sendmail(1), batv-milter(8)

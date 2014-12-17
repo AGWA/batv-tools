@@ -1,6 +1,6 @@
 CXX = c++
 CXXFLAGS ?= -Wall -pedantic -O2
-CXXFLAGS += -ansi -Wno-long-long
+CXXFLAGS += -Wno-long-long
 LDFLAGS += -lcrypto
 LIBMILTER_LDFLAGS = -L/usr/lib/libmilter -lmilter -lpthread
 PREFIX = /usr/local
@@ -19,13 +19,13 @@ all-tools: $(TOOLS_PROGRAMS)
 all-milter: $(MILTER_PROGRAMS)
 
 batv-milter: $(COMMON_OBJFILES) $(MILTER_OBJFILES) batv-milter.o
-	$(CXX) $(CXXFLAGS) -o $@ $^ $(LDFLAGS) $(LIBMILTER_LDFLAGS)
+	$(CXX) $(CXXFLAGS) -o $@ $(COMMON_OBJFILES) $(MILTER_OBJFILES) batv-milter.o $(LDFLAGS) $(LIBMILTER_LDFLAGS)
 
 batv-validate: $(COMMON_OBJFILES) batv-validate.o
-	$(CXX) $(CXXFLAGS) -o $@ $^ $(LDFLAGS)
+	$(CXX) $(CXXFLAGS) -o $@ $(COMMON_OBJFILES) batv-validate.o $(LDFLAGS)
 
 batv-sign: $(COMMON_OBJFILES) batv-sign.o
-	$(CXX) $(CXXFLAGS) -o $@ $^ $(LDFLAGS)
+	$(CXX) $(CXXFLAGS) -o $@ $(COMMON_OBJFILES) batv-sign.o $(LDFLAGS)
 
 clean:
 	rm -f *.o $(PROGRAMS)
@@ -33,11 +33,12 @@ clean:
 install: install-tools install-milter
 
 install-tools:
-	install -m 755 batv-validate $(PREFIX)/bin/
-	install -m 755 batv-sign $(PREFIX)/bin/
-	install -m 755 batv-sendmail $(PREFIX)/bin/
+	install -m 755 batv-keygen $(DESTDIR)$(PREFIX)/bin/
+	install -m 755 batv-validate $(DESTDIR)$(PREFIX)/bin/
+	install -m 755 batv-sign $(DESTDIR)$(PREFIX)/bin/
+	install -m 755 batv-sendmail $(DESTDIR)$(PREFIX)/bin/
 
 install-milter:
-	install -m 755 batv-milter $(PREFIX)/sbin/
+	install -m 755 batv-milter $(DESTDIR)$(PREFIX)/sbin/
 
 .PHONY: all all-tools all-milter clean install install-tools install-milter

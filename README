@@ -55,19 +55,14 @@ instructions on getting up-and-running quickly.
 
 DEPENDENCIES
 
-To use the standalone tools you need:
-
-  * OpenSSL
-
 To use the milter, you need:
 
-  * OpenSSL
   * libmilter, from Sendmail 8.14.0 or higher
   * Postfix 2.6 or higher, Sendmail 8.14.0 or higher, or a MTA with equivalent
     milter functionality
 
 To build you need a C++ compiler (such as gcc) and development
-headers for OpenSSL and libmilter.
+headers for libmilter.
 
 
 CURRENT STATUS
@@ -154,8 +149,7 @@ LEGALESE
 Copyright (C) 2013 Andrew Ayer
 
 Licensed predominantly under the GPLv3 with OpenSSL Linking Exception.
-May also contain code licensed under less restrictive GPL-compatible
-licenses.
+Also contains code licensed under more permissive GPL-compatible licenses.
 
 batv-tools is distributed in the hope that it will be useful, but WITHOUT
 ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or

@@ -34,7 +34,6 @@
 #include "verify.hpp"
 #include "key.hpp"
 #include "common.hpp"
-#include "openssl-threads.hpp"
 #include <iostream>
 #include <signal.h>
 #include <fstream>
@@ -407,8 +406,6 @@ int main (int argc, const char** argv)
 		umask(~config->socket_mode & 0777);
 	}
 
-	openssl_init_threads();
-
 	smfi_setdbg(config->debug);
 
 	bool			ok = true;
@@ -430,8 +427,6 @@ int main (int argc, const char** argv)
 	}
 
 	// Clean up
-	openssl_cleanup_threads();
-
 	if (const char* path = get_socket_path(conn_spec)) {
 		unlink(path);
 	}

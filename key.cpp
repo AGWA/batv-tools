@@ -30,6 +30,7 @@
 
 #include "key.hpp"
 #include "common.hpp"
+#include "util.hpp"
 #include <fstream>
 #include <limits>
 
@@ -72,6 +73,7 @@ void	batv::load_key_map (Key_map& key_map, std::istream& in)
 		// read key file path
 		std::string		key_file_path;
 		std::getline(in, key_file_path);
+		chomp(key_file_path);
 
 		// Load the keyfile 
 		load_key(key_map[address], key_file_path);

@@ -18,6 +18,9 @@
 
 #include <stddef.h>
 #include <stdint.h>
+#include <string>
 
 void	explicit_memzero (void* s, size_t n); // zero memory that won't be optimized away
 void	store_be64 (unsigned char* p, uint64_t i);
+
+inline void chomp (std::string& str) { str.erase(str.find_last_not_of(" \t\r\n") + 1); } // NB: std::string::npos+1==0

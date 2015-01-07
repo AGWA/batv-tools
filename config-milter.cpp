@@ -30,6 +30,7 @@
 
 #include "config-milter.hpp"
 #include "common.hpp"
+#include "util.hpp"
 #include <arpa/inet.h>
 #include <sys/socket.h>
 #include <stdint.h>
@@ -232,6 +233,7 @@ void	Config::load (std::istream& in)
 		// read directive value
 		std::string		value;
 		std::getline(in, value);
+		chomp(value);
 
 		set(directive, value);
 	}

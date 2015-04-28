@@ -80,7 +80,9 @@ automated/simplified for you.
 	and for locally-originated mail.  With Postfix, this requires
 	adding the milter to both 'smtpd_milters' and 'non_smtpd_milters'.
 
-	Example for Postfix, assuming a /var/spool/postfix chroot:
+	Example for Postfix, assuming the socket file is
+	/var/spool/postfix/batv-milter/batv-milter.sock, and Postfix is
+	chroot'd to /var/spool/postfix:
 
 		smtpd_milters = unix:/batv-milter/batv-milter.sock
 		non_smtpd_milters = unix:/batv-milter/batv-milter.sock

@@ -28,7 +28,8 @@
  * as that of the covered work.
  */
 
-#pragma once
+#ifndef BATV_COMMON_HPP
+#define BATV_COMMON_HPP
 
 #include <string>
 
@@ -47,3 +48,5 @@ namespace batv {
 
 	bool unix_socket_is_alive (const std::string& path, int timeout_milliseconds);
 }
+
+#endif

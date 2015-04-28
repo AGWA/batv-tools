@@ -25,7 +25,8 @@
  * authorization.
  */
 
-#pragma once
+#ifndef BATV_SHA1_HPP
+#define BATV_SHA1_HPP
 
 #include "blockhash.hpp"
 #include "util.hpp"
@@ -62,3 +63,5 @@ namespace crypto {
 
 	typedef Block_hash<Sha1_state> Sha1;
 }
+
+#endif

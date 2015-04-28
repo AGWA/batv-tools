@@ -25,7 +25,8 @@
  * authorization.
  */
 
-#pragma once
+#ifndef BATV_BLOCKHASH_HPP
+#define BATV_BLOCKHASH_HPP
 
 #include <stddef.h>
 #include <cstring>
@@ -103,3 +104,5 @@ namespace crypto {
 		}
 	};
 }
+
+#endif

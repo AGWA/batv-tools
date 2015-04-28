@@ -24,7 +24,9 @@
  * sale, use or other dealings in this Software without prior written
  * authorization.
  */
-#pragma once
+
+#ifndef BATV_HMAC_HPP
+#define BATV_HMAC_HPP
 
 #include <cstring>
 #include <stddef.h>
@@ -99,3 +101,5 @@ namespace crypto {
 		}
 	};
 }
+
+#endif

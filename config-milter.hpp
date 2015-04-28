@@ -28,7 +28,8 @@
  * as that of the covered work.
  */
 
-#pragma once
+#ifndef BATV_CONFIG_MILTER_HPP
+#define BATV_CONFIG_MILTER_HPP
 
 #include "key.hpp"
 #include "config.hpp"
@@ -83,3 +84,4 @@ namespace batv {
 	};
 }
 
+#endif

@@ -44,4 +44,6 @@ namespace batv {
 	void drop_privileges (const std::string& username, const std::string& groupname);
 
 	void daemonize (const std::string& pid_file, const std::string& stderr_file);
+
+	bool unix_socket_is_alive (const std::string& path, int timeout_milliseconds);
 }

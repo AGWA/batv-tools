@@ -6,8 +6,6 @@
 			...
 		better formatting
 
-[Milter] Clean up stale sockets, either in milter itself or in init script
-
 [Milter] Config options to specify the exact socket owner/group (to be effected before dropping privileges)
 
 [Milter] Logging so we know when something goes wrong (syslog or just redirect stderr to a log file)

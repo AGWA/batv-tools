@@ -1,3 +1,11 @@
+v0.7 (2015-05-10)
+  * Detect and remove stale socket files when starting up. This is
+    helpful if the system shuts down uncleanly and the socket file is
+    stored on a persistent filesystem.
+  * Ignore trailing whitespace on lines when parsing config files.
+  * Eliminate dependency on OpenSSL.
+  * Minor documentation improvements.
+
 v0.6 (2014-12-16)
   * Add man pages.
   * Add support for $BATV_KEY_MAP_FILE in batv-sendmail for specifying

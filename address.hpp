@@ -28,7 +28,9 @@
  * as that of the covered work.
  */
 
-#pragma once 
+#ifndef BATV_ADDRESS_HPP
+#define BATV_ADDRESS_HPP
+
 #include <string>
 
 namespace batv {
@@ -54,3 +56,4 @@ namespace batv {
 	std::string	canon_address (const char*);
 }
 
+#endif

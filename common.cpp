@@ -32,6 +32,7 @@
 #include <unistd.h>
 #include <cstdlib>
 #include <cstdio>
+#include <cstring>
 #include <errno.h>
 #include <string.h>
 #include <sys/types.h>
@@ -39,7 +40,10 @@
 #include <pwd.h>
 #include <grp.h>
 #include <fcntl.h>
+#include <poll.h>
 #include <fstream>
+#include <sys/socket.h>
+#include <sys/un.h>
 
 using namespace batv;
 
@@ -148,3 +152,65 @@ void batv::daemonize (const std::string& pid_file, const std::string& stderr_fil
 	open("/dev/null", O_WRONLY);
 }
 
+bool batv::unix_socket_is_alive (const std::string& path, int timeout_milliseconds)
+{
+	struct sockaddr_un	addr;
+	if (path.size() >= sizeof(addr.sun_path) - 1) {
+		// path too long
+		return false;
+	}
+	addr.sun_family = AF_UNIX;
+	std::strcpy(addr.sun_path, path.c_str()); // safe - length of path checked above
+
+	const int		sockfd = socket(AF_UNIX, SOCK_STREAM, 0);
+	if (sockfd == -1) {
+		// socket(AF_UNIX) failed
+		return false;
+	}
+	const int		sock_flags = fcntl(sockfd, F_GETFL);
+	if (sock_flags == -1) {
+		// fcntl(F_GETFL) failed
+		close(sockfd);
+		return false;
+	}
+	if (fcntl(sockfd, F_SETFL, sock_flags | O_NONBLOCK) == -1) {
+		// fcntl(F_SETFL) failed
+		close(sockfd);
+		return false;
+	}
+	if (connect(sockfd, reinterpret_cast<struct sockaddr*>(&addr), sizeof(addr.sun_family) + path.size()) == -1 && errno != EINPROGRESS) {
+		// connect() failed
+		close(sockfd);
+		return false;
+	}
+	struct pollfd		pfd;
+	pfd.fd = sockfd;
+	pfd.events = POLLOUT;
+	const int		poll_res = poll(&pfd, 1, timeout_milliseconds);
+	if (poll_res == -1) {
+		// poll() failed
+		close(sockfd);
+		return false;
+	}
+	if (poll_res == 0) {
+		// Timeout
+		close(sockfd);
+		return false;
+	}
+
+	int			sock_error;
+	socklen_t		sock_error_len = sizeof(sock_error);
+	if (getsockopt(sockfd, SOL_SOCKET, SO_ERROR, &sock_error, &sock_error_len) == -1) {
+		// getsockopt(SO_ERROR) failed
+		close(sockfd);
+		return false;
+	}
+	if (sock_error != 0) {
+		// connect() failed
+		close(sockfd);
+		return false;
+	}
+	// connect() succeeded
+	close(sockfd);
+	return true;
+}

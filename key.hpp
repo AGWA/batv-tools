@@ -28,7 +28,8 @@
  * as that of the covered work.
  */
 
-#pragma once
+#ifndef BATV_KEY_HPP
+#define BATV_KEY_HPP
 
 #include <map>
 #include <vector>
@@ -48,3 +49,4 @@ namespace batv {
 	const Key*	get_key (const Key_map&, const std::string& sender_address, const Key* default_key =NULL);
 }
 
+#endif

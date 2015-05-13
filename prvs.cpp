@@ -36,9 +36,8 @@
 #include <stdio.h>
 #include <cstdlib>
 #include <ctime>
-#include <openssl/sha.h>
-#include <openssl/hmac.h>
-#include <openssl/evp.h>
+#include "hmac.hpp"
+#include "sha1.hpp"
 
 using namespace batv;
 
@@ -50,16 +49,12 @@ static unsigned int today ()
 static void make_prvs_hash (unsigned char* hash_out, const char* tag_val, const Email_address& orig_mailfrom, const std::vector<unsigned char>& key)
 {
 	// hash-source = K DDD <orig-mailfrom>
-	std::vector<unsigned char>	hash_source(4 + orig_mailfrom.local_part.size() + 1 + orig_mailfrom.domain.size());
-	std::copy(tag_val, tag_val + 4, hash_source.begin());
-	std::copy(orig_mailfrom.local_part.begin(), orig_mailfrom.local_part.end(), hash_source.begin() + 4);
-	hash_source[4 + orig_mailfrom.local_part.size()] = '@';
-	std::copy(orig_mailfrom.domain.begin(), orig_mailfrom.domain.end(), hash_source.begin() + 4 + orig_mailfrom.local_part.size() + 1);
-
-	HMAC(EVP_sha1(),
-			&key[0], key.size(),
-			&hash_source[0], hash_source.size(),
-			hash_out, NULL);
+	crypto::Hmac<crypto::Sha1>	hmac(key.data(), key.size());
+	hmac.update(tag_val, 4);
+	hmac.update(orig_mailfrom.local_part.data(), orig_mailfrom.local_part.size());
+	hmac.update("@", 1);
+	hmac.update(orig_mailfrom.domain.data(), orig_mailfrom.domain.size());
+	hmac.finish(hash_out);
 }
 
 bool	batv::prvs_validate (const Batv_address& address, unsigned int lifetime, const std::vector<unsigned char>& key)

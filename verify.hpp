@@ -28,7 +28,8 @@
  * as that of the covered work.
  */
 
-#pragma once
+#ifndef BATV_VERIFY_HPP
+#define BATV_VERIFY_HPP
 
 #include <string>
 
@@ -47,3 +48,5 @@ namespace batv {
 
 	Verify_result verify (const Email_address& env_rcpt, std::string* true_rcpt, const Common_config&);
 }
+
+#endif

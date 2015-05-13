@@ -28,7 +28,8 @@
  * as that of the covered work.
  */
 
-#pragma once
+#ifndef BATV_CONFIG_HPP
+#define BATV_CONFIG_HPP
 
 #include "key.hpp"
 #include <vector>
@@ -52,3 +53,4 @@ namespace batv {
 	};
 }
 
+#endif

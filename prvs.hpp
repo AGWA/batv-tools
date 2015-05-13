@@ -28,7 +28,8 @@
  * as that of the covered work.
  */
 
-#pragma once
+#ifndef BATV_PRVS_HPP
+#define BATV_PRVS_HPP
 
 #include "address.hpp"
 #include <vector>
@@ -38,3 +39,5 @@ namespace batv {
 	bool		prvs_validate (const Batv_address&, unsigned int lifetime, const std::vector<unsigned char>& key);
 	Batv_address	prvs_generate (const Email_address& orig_mailfrom, unsigned int lifetime, const std::vector<unsigned char>& key);
 }
+
+#endif

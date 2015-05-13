@@ -34,7 +34,6 @@
 #include "verify.hpp"
 #include "key.hpp"
 #include "common.hpp"
-#include "openssl-threads.hpp"
 #include <iostream>
 #include <signal.h>
 #include <fstream>
@@ -387,8 +386,22 @@ int main (int argc, const char** argv)
 	}
 
 	if (const char* path = get_socket_path(conn_spec)) {
-		if (access(path, F_OK) == 0) {
-			std::clog << path << ": socket file already exists" << std::endl;
+		struct stat status;
+		if (lstat(path, &status) == 0) {
+			if (!S_ISSOCK(status.st_mode)) {
+				std::clog << path << ": socket file already exists (as a non-socket file)" << std::endl;
+				return 1;
+			}
+			if (unix_socket_is_alive(path, 5000)) {
+				std::clog << path << ": socket file already exists and is in use by a running process" << std::endl;
+				return 1;
+			}
+			if (unlink(path) == -1) {
+				std::clog << path << ": could not remove stale socket file:" << strerror(errno) << std::endl;
+				return 1;
+			}
+		} else if (errno != ENOENT) {
+			std::clog << path << ": " << strerror(errno) << std::endl;
 			return 1;
 		}
 	}
@@ -406,8 +419,6 @@ int main (int argc, const char** argv)
 		// files so this shouldn't have any undesired side-effects.
 		umask(~config->socket_mode & 0777);
 	}
-
-	openssl_init_threads();
 
 	smfi_setdbg(config->debug);
 
@@ -430,8 +441,6 @@ int main (int argc, const char** argv)
 	}
 
 	// Clean up
-	openssl_cleanup_threads();
-
 	if (const char* path = get_socket_path(conn_spec)) {
 		unlink(path);
 	}

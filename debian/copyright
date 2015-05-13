@@ -30,8 +30,8 @@ License: GPL-3+ with OpenSSL exception
  shall include the source code for the parts of OpenSSL used as well
  as that of the covered work.
 
-Files: openssl-threads.cpp openssl-threads.hpp
-Copyright: Copyright (C) 2012 Andrew Ayer
+Files: blockhash.hpp hmac.hpp sha1.cpp sha1.hpp
+Copyright: Copyright (C) 2013-2014 Andrew Ayer
 License: X11
  Permission is hereby granted, free of charge, to any person obtaining a
  copy of this software and associated documentation files (the "Software"),

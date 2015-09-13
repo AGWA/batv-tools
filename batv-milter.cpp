@@ -397,7 +397,7 @@ int main (int argc, const char** argv)
 				return 1;
 			}
 			if (unlink(path) == -1) {
-				std::clog << path << ": could not remove stale socket file:" << strerror(errno) << std::endl;
+				std::clog << path << ": could not remove stale socket file: " << strerror(errno) << std::endl;
 				return 1;
 			}
 		} else if (errno != ENOENT) {

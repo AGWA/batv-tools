@@ -56,12 +56,12 @@ void batv::check_personal_key_path (std::string& path, const char* filename)
 		path.append("/").append(filename);
 		if (access(path.c_str(), R_OK) == -1) {
 			if (errno != ENOENT) {
-				throw Config_error(path + ": " + strerror(errno));
+				throw Initialization_error(path + ": " + strerror(errno));
 			}
 			path.clear();
 		}
 	} else if (access(path.c_str(), R_OK) == -1) {
-		throw Config_error(path + ": " + strerror(errno));
+		throw Initialization_error(path + ": " + strerror(errno));
 	}
 }
 
@@ -76,28 +76,28 @@ void batv::drop_privileges (const std::string& username, const std::string& grou
 	if (!username.empty()) {
 		errno = 0;
 		if (!(usr = getpwnam(username.c_str()))) {
-			throw Config_error(username + ": " + (errno ? strerror(errno) : "No such user"));
+			throw Initialization_error(username + ": " + (errno ? strerror(errno) : "No such user"));
 		}
 	}
 
 	if (!groupname.empty()) {
 		errno = 0;
 		if (!(grp = getgrnam(groupname.c_str()))) {
-			throw Config_error(groupname + ": " + (errno ? strerror(errno) : "No such group"));
+			throw Initialization_error(groupname + ": " + (errno ? strerror(errno) : "No such group"));
 		}
 	}
 
 	// If no group is specified, but a user is specified, drop to the primary GID of that user
 	if (setgid(grp ? grp->gr_gid : usr->pw_gid) == -1) {
-		throw Config_error(std::string("Failed to drop privileges: setgid: ") + strerror(errno));
+		throw Initialization_error(std::string("Failed to drop privileges: setgid: ") + strerror(errno));
 	}
 
 	if (usr) {
 		if (initgroups(usr->pw_name, usr->pw_gid) == -1) {
-			throw Config_error(std::string("Failed to drop privileges: initgroups: ") + strerror(errno));
+			throw Initialization_error(std::string("Failed to drop privileges: initgroups: ") + strerror(errno));
 		}
 		if (setuid(usr->pw_uid) == -1) {
-			throw Config_error(std::string("Failed to drop privileges: setuid: ") + strerror(errno));
+			throw Initialization_error(std::string("Failed to drop privileges: setuid: ") + strerror(errno));
 		}
 	}
 }
@@ -109,7 +109,7 @@ void batv::daemonize (const std::string& pid_file, const std::string& stderr_fil
 	if (!pid_file.empty()) {
 		pid_out.open(pid_file.c_str(), std::ofstream::out | std::ofstream::trunc);
 		if (!pid_out) {
-			throw Config_error("Unable to open PID file " + pid_file + " for writing.");
+			throw Initialization_error("Unable to open PID file " + pid_file + " for writing.");
 		}
 	}
 
@@ -118,7 +118,7 @@ void batv::daemonize (const std::string& pid_file, const std::string& stderr_fil
        	if (stderr_file.empty()) {
 		stderr_fd = open("/dev/null", O_WRONLY);
 	} else if ((stderr_fd = open(stderr_file.c_str(), O_WRONLY | O_APPEND | O_CREAT, 0666)) == -1) {
-		throw Config_error("Failed to open " + stderr_file + ": " + strerror(errno));
+		throw Initialization_error("Failed to open " + stderr_file + ": " + strerror(errno));
 	}
 
 	// Fork

@@ -355,7 +355,7 @@ try {
 
 	return 0;
 
-} catch (const Config_error& e) {
+} catch (const Initialization_error& e) {
 	std::clog << argv[0] << ": " << e.message << std::endl;
 	return 1;
 } catch (const Input_error& e) {

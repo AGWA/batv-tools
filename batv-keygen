@@ -2,6 +2,7 @@
 
 PROGNAME=`basename "$0"`
 USAGE="$PROGNAME [-f KEYFILE]"
+KEYSIZE=64 # in bytes; HMAC-SHA-256 key size
 
 if [ `id -u` -ne 0 ]
 then
@@ -44,6 +45,16 @@ then
 fi
 
 umask 077
-openssl rand 64 > "$keyfile"
-echo "$keyfile created"
-exit 0
+
+for device in /dev/urandom /dev/random
+do
+	if [ -e "$device" ]
+	then
+		dd if="$device" of="$keyfile" bs=1 count=$KEYSIZE
+		echo "$keyfile created"
+		exit 0
+	fi
+done
+
+echo "$PROGNAME: no random devices found (neither /dev/urandom nor /dev/random exist)" >&2
+exit 1

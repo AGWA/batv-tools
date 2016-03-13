@@ -69,7 +69,7 @@ namespace {
 		if (address_str.find(':') != std::string::npos) {
 			// IPv6 address
 			if (inet_pton(AF_INET6, address_str.c_str(), &address) != 1) {
-				throw Config_error("Invalid IPv6 address: " + address_str);
+				throw Initialization_error("Invalid IPv6 address: " + address_str);
 			}
 
 			if (prefix_len == -1) {
@@ -79,7 +79,7 @@ namespace {
 			// IPv4 address
 			struct in_addr	ipv4_address;
 			if (inet_pton(AF_INET, address_str.c_str(), &ipv4_address) != 1) {
-				throw Config_error("Invalid IPv4 address: " + address_str);
+				throw Initialization_error("Invalid IPv4 address: " + address_str);
 			}
 
 			address = make_ipv4_mapped_address(ipv4_address);
@@ -92,7 +92,7 @@ namespace {
 		}
 
 		if (prefix_len < 0 || prefix_len > 128) {
-			throw Config_error("Invalid prefix length in CIDR string: " + std::string(str));
+			throw Initialization_error("Invalid prefix length in CIDR string: " + std::string(str));
 		}
 
 		return Config::Ipv6_cidr(address, prefix_len);
@@ -131,7 +131,7 @@ void	Config::set (const std::string& directive, const std::string& value)
 		} else if (value == "no" || value == "false" || value == "off" || value == "0") {
 			daemon = false;
 		} else {
-			throw Config_error("Invalid boolean value " + value);
+			throw Initialization_error("Invalid boolean value " + value);
 		}
 	} else if (directive == "debug") {
 		debug = std::atoi(value.c_str());
@@ -145,7 +145,7 @@ void	Config::set (const std::string& directive, const std::string& value)
 		// Include another config file
 		std::ifstream	config_in(value.c_str());
 		if (!config_in) {
-			throw Config_error("Unable to open config file " + value);
+			throw Initialization_error("Unable to open config file " + value);
 		}
 		load(config_in);
 	} else if (directive == "socket") {
@@ -155,7 +155,7 @@ void	Config::set (const std::string& directive, const std::string& value)
 				value[0] < '0' || value[0] > '7' ||
 				value[1] < '0' || value[1] > '7' ||
 				value[2] < '0' || value[2] > '7') {
-			throw Config_error("Invalid socket mode (not a 3 digit octal number): " + value);
+			throw Initialization_error("Invalid socket mode (not a 3 digit octal number): " + value);
 		}
 		socket_mode = ((value[0] - '0') << 6) | ((value[1] - '0') << 3) | (value[2] - '0');
 	} else if (directive == "mode") {
@@ -169,24 +169,24 @@ void	Config::set (const std::string& directive, const std::string& value)
 			do_verify = true;
 			do_sign = true;
 		} else {
-			throw Config_error("Invalid mode " + value);
+			throw Initialization_error("Invalid mode " + value);
 		}
 	} else if (directive == "lifetime") {
 		address_lifetime = std::atoi(value.c_str());
 		if (address_lifetime < 1 || address_lifetime > 999) {
-			throw Config_error("Invalid address lifetime " + value + " (must be between 1 and 999, inclusive)");
+			throw Initialization_error("Invalid address lifetime " + value + " (must be between 1 and 999, inclusive)");
 		}
 	} else if (directive == "internal-host") {
 		internal_hosts.push_back(parse_cidr_string(value.c_str()));
 	} else if (directive == "sub-address-delimiter") {
 		if (value.size() != 1) {
-			throw Config_error("Sub address delimiter must be exactly one character");
+			throw Initialization_error("Sub address delimiter must be exactly one character");
 		}
 		sub_address_delimiter = value[0];
 	} else if (directive == "key-map") {
 		std::ifstream	key_map_in(value.c_str());
 		if (!key_map_in) {
-			throw Config_error("Unable to open key map " + value);
+			throw Initialization_error("Unable to open key map " + value);
 		}
 		load_key_map(keys, key_map_in);
 	} else if (directive == "on-invalid") {
@@ -197,7 +197,7 @@ void	Config::set (const std::string& directive, const std::string& value)
 		} else if (value == "reject") {
 			on_invalid = FAILURE_REJECT;
 		} else {
-			throw Config_error("Invalid value for 'on-invalid' directive (should be 'tempfail', 'accept', or 'reject'): " + value);
+			throw Initialization_error("Invalid value for 'on-invalid' directive (should be 'tempfail', 'accept', or 'reject'): " + value);
 		}
 	} else if (directive == "on-internal-error") {
 		if (value == "tempfail") {
@@ -207,10 +207,10 @@ void	Config::set (const std::string& directive, const std::string& value)
 		} else if (value == "reject") {
 			on_internal_error = FAILURE_REJECT;
 		} else {
-			throw Config_error("Invalid value for 'on-internal-error' directive (should be 'tempfail', 'accept', or 'reject'): " + value);
+			throw Initialization_error("Invalid value for 'on-internal-error' directive (should be 'tempfail', 'accept', or 'reject'): " + value);
 		}
 	} else {
-		throw Config_error("Invalid config directive " + directive);
+		throw Initialization_error("Invalid config directive " + directive);
 	}
 }
 
@@ -242,7 +242,7 @@ void	Config::load (std::istream& in)
 void	Config::validate () const
 {
 	if (socket_spec.empty()) {
-		throw Config_error("Milter socket not specified");
+		throw Initialization_error("Milter socket not specified");
 	}
 }
 

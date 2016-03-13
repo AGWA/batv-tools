@@ -34,10 +34,10 @@
 #include <string>
 
 namespace batv {
-	struct Config_error {
+	struct Initialization_error {
 		std::string	message;
 
-		explicit Config_error (const std::string& m) : message(m) { }
+		explicit Initialization_error (const std::string& m) : message(m) { }
 	};
 
 	void check_personal_key_path (std::string& path, const char* filename);

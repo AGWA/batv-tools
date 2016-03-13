@@ -40,7 +40,7 @@ void	batv::load_key (Key& key, const std::string& key_file_path)
 {
 	std::ifstream		key_file_in(key_file_path.c_str());
 	if (!key_file_in) {
-		throw Config_error("Unable to open key file " + key_file_path);
+		throw Initialization_error("Unable to open key file " + key_file_path);
 	}
 
 	key.clear();
@@ -50,7 +50,7 @@ void	batv::load_key (Key& key, const std::string& key_file_path)
 		key.push_back(ch);
 	}
 	if (key.empty()) {
-		throw Config_error("Key file " + key_file_path + " is empty");
+		throw Initialization_error("Key file " + key_file_path + " is empty");
 	}
 }
 

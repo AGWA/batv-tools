@@ -330,26 +330,21 @@ namespace {
 }
 
 int main (int argc, const char** argv)
-{
+try {
 	Config		main_config;
-	try {
-		// Command line arguments come in pairs of the form "--name value" and correspond
-		// directly to the name/value option pairs in the config file (a la OpenVPN).
-		for (int i = 1; i < argc; i += 2) {
-			if (std::strncmp(argv[i], "--", 2) == 0 && i + 1 < argc) {
-				main_config.set(argv[i] + 2, argv[i+1]);
-			} else {
-				std::clog << argv[0] << ": Bad arguments" << std::endl;
-				return 2;
-			}
+	// Command line arguments come in pairs of the form "--name value" and correspond
+	// directly to the name/value option pairs in the config file (a la OpenVPN).
+	for (int i = 1; i < argc; i += 2) {
+		if (std::strncmp(argv[i], "--", 2) == 0 && i + 1 < argc) {
+			main_config.set(argv[i] + 2, argv[i+1]);
+		} else {
+			std::clog << argv[0] << ": Bad arguments" << std::endl;
+			return 2;
 		}
-		main_config.validate();
-		if (main_config.keys.empty()) {
-			std::clog << argv[0] << ": Warning: no keys specified in config.  This program will do nothing useful." << std::endl;
-		}
-	} catch (const Config_error& e) {
-		std::clog << argv[0] << ": Configuration error: " << e.message << std::endl;
-		return 1;
+	}
+	main_config.validate();
+	if (main_config.keys.empty()) {
+		std::clog << argv[0] << ": Warning: no keys specified in config.  This program will do nothing useful." << std::endl;
 	}
 	config = &main_config;
 
@@ -397,7 +392,7 @@ int main (int argc, const char** argv)
 				return 1;
 			}
 			if (unlink(path) == -1) {
-				std::clog << path << ": could not remove stale socket file:" << strerror(errno) << std::endl;
+				std::clog << path << ": could not remove stale socket file: " << strerror(errno) << std::endl;
 				return 1;
 			}
 		} else if (errno != ENOENT) {
@@ -449,5 +444,7 @@ int main (int argc, const char** argv)
 	}
        
 	return ok ? 0 : 1;
+} catch (const Initialization_error& e) {
+	std::clog << argv[0] << ": " << e.message << std::endl;
+	return 1;
 }
-

@@ -1,3 +1,11 @@
+batv-tools (0.8-1~agwa1) unstable; urgency=low
+
+  * New upstream release.
+  * Drop OpenSSL dependency.
+  * Document /etc/default/batv-milter.
+
+ -- Andrew Ayer <agwa@andrewayer.name>  Sun, 13 Mar 2016 15:28:48 -0700
+
 batv-tools (0.7-1~agwa1) unstable; urgency=low
 
   * New upstream release.

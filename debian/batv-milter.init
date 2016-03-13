@@ -17,6 +17,7 @@ RUNDIR=/var/run/$NAME
 USER=batv-milter
 GROUP=batv-milter
 CONFIG=/etc/batv-milter.conf
+DAEMON_OPTS=
 INSTANCES=
 
 test -x $DAEMON || exit 0

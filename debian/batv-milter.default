@@ -1,3 +1,17 @@
-# Command-line options specified here will override the contents of
-# /etc/batv-milter.conf.
-DAEMON_OPTS=""
+# /etc/default/batv-milter
+
+# Options affecting the initialization of batv-milter
+# To set an option, uncomment the applicable line and change the example value.
+
+# The user which batv-milter should run as (default: batv-milter)
+#USER="example-username"
+
+# The group which batv-milter should run as (default: batv-milter)
+#GROUP="example-groupname"
+
+# The config file for batv-milter (default: /etc/batv-milter.conf)
+#CONFIG="/example/path/to/batv-milter.conf"
+
+# Extra command-line options to pass to batv-milter
+# (note: command-line options override options specified in the config file)
+#DAEMON_OPTS=""

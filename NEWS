@@ -1,3 +1,8 @@
+v0.8 (2016-03-13)
+  * Fix bug where an invalid username in the config would cause SIGABRT.
+  * Eliminate batv-keygen's dependency on OpenSSL.
+  * Minor typo fixes and documentation improvements.
+
 v0.7 (2015-05-10)
   * Detect and remove stale socket files when starting up. This is
     helpful if the system shuts down uncleanly and the socket file is

@@ -108,9 +108,13 @@ namespace {
 			// Probably a local user calling sendmail directly
 			batv_ctx->client_is_internal = true;
 		} else if (hostaddr->sa_family == AF_INET) {
-			batv_ctx->client_is_internal = config->is_internal_host(reinterpret_cast<struct sockaddr_in*>(hostaddr)->sin_addr);
+			sockaddr_in	sin;
+			std::memcpy(&sin, hostaddr, sizeof(sin));
+			batv_ctx->client_is_internal = config->is_internal_host(sin.sin_addr);
 		} else if (hostaddr->sa_family == AF_INET6) {
-			batv_ctx->client_is_internal = config->is_internal_host(reinterpret_cast<struct sockaddr_in6*>(hostaddr)->sin6_addr);
+			sockaddr_in6	sin6;
+			std::memcpy(&sin6, hostaddr, sizeof(sin6));
+			batv_ctx->client_is_internal = config->is_internal_host(sin6.sin6_addr);
 		} else {
 			// Unsupported socket family. Can't tell if client is internal.
 		}

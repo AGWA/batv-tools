@@ -47,7 +47,8 @@ namespace batv {
 		enum Failure_mode {
 			FAILURE_TEMPFAIL,
 			FAILURE_ACCEPT,
-			FAILURE_REJECT
+			FAILURE_REJECT,
+			FAILURE_DISCARD
 		};
 
 		bool			daemon;

@@ -89,6 +89,7 @@ namespace {
 		case Config::FAILURE_TEMPFAIL:	return SMFIS_TEMPFAIL;
 		case Config::FAILURE_ACCEPT:	return SMFIS_ACCEPT;
 		case Config::FAILURE_REJECT:	return SMFIS_REJECT;
+		case Config::FAILURE_DISCARD:	return SMFIS_DISCARD;
 		}
 		return SMFIS_TEMPFAIL;
 	}

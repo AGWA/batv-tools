@@ -196,8 +196,10 @@ void	Config::set (const std::string& directive, const std::string& value)
 			on_invalid = FAILURE_ACCEPT;
 		} else if (value == "reject") {
 			on_invalid = FAILURE_REJECT;
+		} else if (value == "discard") {
+			on_invalid = FAILURE_DISCARD;
 		} else {
-			throw Initialization_error("Invalid value for 'on-invalid' directive (should be 'tempfail', 'accept', or 'reject'): " + value);
+			throw Initialization_error("Invalid value for 'on-invalid' directive (should be 'tempfail', 'accept', 'reject', or 'discard'): " + value);
 		}
 	} else if (directive == "on-internal-error") {
 		if (value == "tempfail") {
@@ -206,8 +208,10 @@ void	Config::set (const std::string& directive, const std::string& value)
 			on_internal_error = FAILURE_ACCEPT;
 		} else if (value == "reject") {
 			on_internal_error = FAILURE_REJECT;
+		} else if (value == "discard") {
+			on_internal_error = FAILURE_DISCARD;
 		} else {
-			throw Initialization_error("Invalid value for 'on-internal-error' directive (should be 'tempfail', 'accept', or 'reject'): " + value);
+			throw Initialization_error("Invalid value for 'on-internal-error' directive (should be 'tempfail', 'accept', 'reject', or 'discard'): " + value);
 		}
 	} else {
 		throw Initialization_error("Invalid config directive " + directive);

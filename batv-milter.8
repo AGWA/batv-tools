@@ -55,10 +55,10 @@ Instead of using standard BATV address meta-syntax, use sub address meta-syntax,
 .BI --key-map \ \fIfilename\fR
 Read the key map from \fIfilename\fR.
 .TP
-.BI --on-invalid \ \fBtempfail\fR \ | \ \fBaccept\fR \ | \ \fBreject\fR
+.BI --on-invalid \ \fBtempfail\fR \ | \ \fBaccept\fR \ | \ \fBreject\fR \ | \ \fBdiscard\fR
 What to do with bounces with invalid BATV addresses.  If set to "accept", the invalid status is recorded in the X-Batv-Status header, so a later part of the mail pipeline can filter it out.  (default: accept)
 .TP
-.BI --on-internal-error \ \fBtempfail\fR \ | \ \fBaccept\fR \ | \ \fBreject\fR
+.BI --on-internal-error \ \fBtempfail\fR \ | \ \fBaccept\fR \ | \ \fBreject\fR \ | \ \fBdiscard\fR
 What to do with messages that cause an internal error. (default: tempfail)
 .TP
 .BI --debug \ \fIlevel\fR

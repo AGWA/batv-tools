@@ -6,6 +6,12 @@
 			...
 		better formatting
 
+[Common] Install docs: Mention *where* git-buildpackage leaves the .debs (parent directory) and how to install them (dpkg -i)
+
+[Milter] better doco about socket option; think how I can do some of this automatically?
+
+[Milter] ability to use wildcard for domains in key map file (user suggestion; see private email correspondence on 2015-11-14)
+
 [Milter] Config options to specify the exact socket owner/group (to be effected before dropping privileges)
 
 [Milter] Logging so we know when something goes wrong (syslog or just redirect stderr to a log file)
@@ -27,8 +33,6 @@
 	i.e. so andrew@example.com also matches andrew+foo@example.com
 
 [Common] Key rollover support
-
-[Common] Config_error is becoming more about just config errors, but also initialization errors.  Rename it?
 
 [Milter] chdir to / when daemonizing
 

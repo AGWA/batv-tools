@@ -21,9 +21,6 @@ of standalone tools (batv-sign, batv-validate, batv-sendmail) that
 do signing and validation.  The standalone tools enable individual
 users to use BATV without the involvement of their system administrators.
 
-batv-tools was written by Andrew Ayer <agwa at andrewayer dot name>.
-For more information, see <https://www.agwa.name/projects/batv-tools>.
-
 
 HOW BATV-TOOLS WORKS
 
@@ -67,14 +64,9 @@ headers for libmilter.
 
 CURRENT STATUS
 
-The current version of batv-tools is 0.8, released on 2016-03-13.
-batv-tools aims to be bug-free and reliable, meaning it shouldn't crash,
-malfunction, or do horrible things to your mail.  However, it has not
-reached maturity, meaning it is not as documented, featureful, or
-easy-to-use as it should be.
-
-As of 2019, batv-tools is no longer under active development.  Serious
-bugs will be fixed, but new features are unlikely to be added.
+As of 2021, batv-tools is no longer maintained.  The code does not
+contain any known bugs and worked reliably for many years.  However,
+the author no longer uses it and provides no support for it.
 
 
 SUB-ADDRESS META-SYNTAX
@@ -109,23 +101,6 @@ It is highly recommended that you use the sub-address syntax; batv-tools
 is most extensively tested with the sub-address syntax, and using the
 standard syntax may require additional configuration from your MTA that
 isn't documented here.
-
-
-PROJECT RESOURCES
-
-Home page:      https://agwa.name/projects/batv-tools
-Git repository: https://agwa.name/git/batv-tools.git
-                https://github.com/AGWA/batv-tools.git (mirror)
-GitHub project: https://github.com/AGWA/batv-tools
-Issue tracker:  https://github.com/AGWA/batv-tools/issues
-Announce list:  https://lists.cloudmutt.com/mailman/listinfo/batv-tools-announce
-Discuss list:   https://lists.cloudmutt.com/mailman/listinfo/batv-tools-discuss
-
-For help or questions, send mail to the discuss list
-<batv-tools-discuss@lists.cloudmutt.com>.  To report a bug or make a
-feature request, please open an issue at GitHub or send mail to the
-discuss list.  To contribute code, please send a properly-formatted
-patch to the discuss list, or open a pull request at GitHub.
 
 
 DEBIAN PACKAGING
